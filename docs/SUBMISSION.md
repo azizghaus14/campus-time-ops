@@ -4,7 +4,7 @@
 **Team name:** [your team name]
 **Challenge:** Category 02 — Intelligent Automation & Digital Transformation
 **Repository:** https://github.com/azizghaus14/campus-time-ops
-**Deployed demo:** [Cloud Run URL]
+**Deployed demo:** https://campus-time-ops.onrender.com (Render free plan; first visit after 15 idle minutes takes ~50 s to wake)
 **Pitch deck:** Campus Time Ops — Pitch Deck (PDF export)
 
 ## Project summary (paste into the form)
