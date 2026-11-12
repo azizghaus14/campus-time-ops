@@ -360,8 +360,12 @@ def solve(req: SolveRequest, ds: Dataset, ctx: Optional[Context] = None) -> Solv
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = max(0.2, req.time_limit - t_gen)
-    solver.parameters.num_workers = req.workers
+    import os
+
+    solver.parameters.num_workers = max(1, min(req.workers, os.cpu_count() or 1))
     solver.parameters.random_seed = req.seed
+    # good-enough stop: within 0.5% of the proven bound (the greedy hint is already near-optimal)
+    solver.parameters.relative_gap_limit = 0.005
     t1 = time.perf_counter()
     status = solver.Solve(m)
     t_solve = time.perf_counter() - t1
