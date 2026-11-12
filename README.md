@@ -11,6 +11,12 @@ APSpace *shows* timetables. Campus Time Ops *re-plans and acts on* them:
 - **Slot Finder.** Finds slots where student groups, 2–3 examiners and a suitable room are all free (vivas, presentations, make-up classes, events), then drafts the invites.
 - **Insights.** A Rooms heatmap, Timetable Health, and **Attendance Risk** ("you can miss at most 2 more classes", calculated from the real remaining sessions; read-only).
 
+## What it looks like
+- **Sign in as a persona:** Timetabling Office, Lecturer or Student. Each gets its own home and menu, and the API enforces the permissions.
+- **Assistant home:** type what happened ("I'm sick tomorrow", "Room B-04-03 is flooded until Friday", "Monday 16 Nov is a public holiday"). The assistant shows the impact and a visual before/after plan, with **Approve**, **Prefer afternoon** and **No substitute** buttons. Nothing changes until someone approves.
+- **3D campus:** a schematic model generated from APU room codes. Every room glows by its live state (in use, free, affected, moved here). It has day and week heat maps, a time scrubber, exploded floors and computed insights.
+- **Lecturer "My week" and student "My timetable":** a visual calendar with changes highlighted. Students also get an attendance ring showing how many more classes they can miss.
+
 ## Quick start (offline, about 2 minutes)
 ```bash
 make setup
@@ -18,13 +24,13 @@ make setup
 ```bash
 make dev
 ```
-The dashboard runs on http://localhost:3000, and the API and MCP server on http://localhost:8000 (`/docs`, `/mcp`). On the Overview page, click **"I'm sick tomorrow"**, **"Room B-04-03 is flooded"** or **"Monday 16 Nov is now a public holiday"**. Then approve the proposal and execute it.
+The app runs on http://localhost:3000, and the API and MCP server on http://localhost:8000 (`/docs`, `/mcp`). Sign in as **Lecturer MZD** and click **"I'm sick tomorrow, sort out my classes"**, then **Approve & apply**. Then sign in as **Timetabling Office**, say "Monday 16 Nov is now a public holiday", and open **Campus** on Mon 16 Nov.
 
 | Command | What it does |
 |---|---|
 | `make data` | Fetches the public APU feed, pseudonymises it, writes a dated snapshot, then generates the mocks and the synthetic students |
 | `make data-offline` | Regenerates the mocks and synthetic data from the committed snapshot only |
-| `make test` | Runs the 50 backend tests, including the solver property tests and the approval-gate tests |
+| `make test` | Runs the 63 backend tests, including the solver property tests and the approval-gate tests |
 | `make mcp` / `make inspector` | Runs the MCP server alone on :8001/mcp, or opens it in MCP Inspector |
 | `make bench` | Re-measures the metrics in `docs/METRICS.md` |
 | `make reset-demo` | Restores a clean demo state in under 10 s |
@@ -35,7 +41,7 @@ If port 3000 is taken, run `PORT=3100 make frontend`. Configuration lives in `.e
 ## Repository
 ```
 backend/   FastAPI REST + FastMCP server (28 tools), CP-SAT solver, services, tests
-frontend/  Next.js ops dashboard (8 pages)
+frontend/  Next.js app: persona sign-in, assistant home, 3D campus (three.js), role-specific pages
 agents/    Gemini Enterprise agent configs + instructions (replan, slot_finder) and ADK fallback (adk_app)
 grounding/ APU handbook, holiday schedule, shuttle PDF, campus_ops_policy.md (rules labelled QUOTED / ASSUMPTION / VERIFY)
 data/      pseudonymised snapshot, rooms, group sizes, holidays, shuttle, synthetic students

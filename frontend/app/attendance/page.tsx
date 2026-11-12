@@ -5,6 +5,7 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 
 import { Badge, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner, Stat } from "@/components/ui";
 import { fmtDate, num } from "@/lib/format";
+import { useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
 export default function Page() {
@@ -27,21 +28,23 @@ function Spark({ data }: { data: number[] }) {
 function Attendance() {
   const sp = useSearchParams();
   const router = useRouter();
-  const sel = sp.get("student") || "STU-DEMO-01";
-  const list = useApi<any>("/attendance/risk", { limit: 150 });
-  const one = useApi<any>(`/attendance/students/${sel}`);
+  const session = useSession();
+  const isStudent = session?.role === "student";
+  const sel = isStudent ? session!.user : sp.get("student") || "STU-DEMO-01";
+  const list = useApi<any>(session && !isStudent ? "/attendance/risk" : null, { limit: 150 });
+  const one = useApi<any>(session ? `/attendance/students/${sel}` : null);
   const f = one.data?.forecast;
   return (
     <div>
-      <PageHeader title="Attendance Risk" subtitle="Read-only. Students below or heading towards the attendance threshold, forecast from each intake group's real remaining sessions. All students are synthetic." />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <PageHeader title={isStudent ? "My attendance" : "Attendance Risk"} subtitle={isStudent ? "Forecast from your intake group's real remaining sessions. 80% applies to each module." : "Read-only. Students below or heading towards the attendance threshold, forecast from each intake group's real remaining sessions. All students are synthetic."} />
+      {!isStudent && <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <Stat label="Students (synthetic)" value={num(list.data?.students_total)} />
         <Stat label="Below threshold now" value={num(list.data?.below_threshold)} tone="red" />
         <Stat label="At risk" value={num(list.data?.at_risk)} tone="amber" sub="score ≥ 30: slipping with ≤ 2 absences left, below or projected below, 3+ in a row" />
         <Stat label="Threshold" value={list.data ? `${Math.round(list.data.threshold * 100)}%` : "–"} sub="ATTENDANCE_THRESHOLD · APU rule to VERIFY" />
-      </div>
-      <div className="grid xl:grid-cols-[1fr_440px] gap-4">
-        <Card>
+      </div>}
+      <div className={isStudent ? "grid gap-4 max-w-[560px]" : "grid xl:grid-cols-[1fr_440px] gap-4"}>
+        {!isStudent && <Card>
           <CardHeader title="Risk table" subtitle="Ranked by risk score" />
           <ErrorBox error={list.error} />
           {list.loading && !list.data ? <Spinner label="Forecasting ~3,000 students…" /> : (
@@ -64,7 +67,7 @@ function Attendance() {
               </table>
             </div>
           )}
-        </Card>
+        </Card>}
         <div className="space-y-4">
           {one.loading && !one.data ? <Card><Spinner /></Card> : one.error ? <ErrorBox error={one.error} /> : f && (
             <>
@@ -91,7 +94,7 @@ function Attendance() {
                     <CartesianGrid vertical={false} stroke="var(--grid)" />
                     <XAxis dataKey="week_start" tickFormatter={(d: string) => fmtDate(d, { day: "2-digit", month: "short" })} tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
                     <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: "var(--muted)" }} axisLine={false} tickLine={false} width={30} unit="%" />
-                    <Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: "var(--panel-solid)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} />
                     <ReferenceLine y={f.threshold * 100} stroke="var(--red)" strokeDasharray="4 3" label={{ value: `${Math.round(f.threshold * 100)}%`, fill: "var(--red)", fontSize: 10, position: "insideTopRight" }} />
                     {f.projected_percent_end != null && <ReferenceLine y={f.projected_percent_end} stroke="var(--amber)" strokeDasharray="2 3" label={{ value: "projected", fill: "var(--amber)", fontSize: 10, position: "insideBottomRight" }} />}
                     <Line dataKey="cumulative_percent" name="cumulative" stroke="var(--accent)" strokeWidth={2} dot={false} />

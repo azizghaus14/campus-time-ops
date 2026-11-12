@@ -1,139 +1,252 @@
 "use client";
-import { ArrowRight, CloudRain, HeartPulse, PartyPopper } from "lucide-react";
+import { ArrowUp, Box, CalendarClock, ClipboardCheck, Mic, Sparkles, TriangleAlert, UserRoundCheck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useEffect, useRef, useState } from "react";
 
-import { Badge, Button, Card, CardHeader, Empty, ErrorBox, PageHeader, Spinner, Stat } from "@/components/ui";
+import { CardAction, RenderCard } from "@/components/assistant/cards";
+import { Aurora, Stardust } from "@/components/fx";
+import { Ring, SegBar } from "@/components/viz";
 import { post } from "@/lib/api";
-import { fmtDate, num } from "@/lib/format";
+import { cn, fmtDate, num } from "@/lib/format";
+import { Session, useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
-const DEMO_LECTURER = "MZD";
+type Msg = { id: number; from: "user" | "assistant"; text: string; cards?: any[]; pending?: boolean };
 
-const SCENARIOS = [
-  { key: "sick", icon: HeartPulse, title: `"I'm sick tomorrow" (lecturer ${DEMO_LECTURER})`, sub: "Fri 13 Nov · substitutes first, then reschedule",
-    body: { type: "LECTURER_UNAVAILABLE", scope: { lecturer_id: DEMO_LECTURER }, window: { start: "2026-11-13", end: "2026-11-13" }, reason: "Lecturer on medical leave", created_by: "dashboard-demo" } },
-  { key: "flood", icon: CloudRain, title: `"Room B-04-03 is flooded until Friday"`, sub: "Room swaps at the same time where possible",
-    body: { type: "ROOM_UNAVAILABLE", scope: { rooms: ["B-04-03"] }, window: { start: "2026-11-12T09:00:00+08:00", end: "2026-11-13" }, reason: "Flooded", created_by: "dashboard-demo" } },
-  { key: "holiday", icon: PartyPopper, title: `"Monday 16 Nov is now a public holiday"`, sub: "Whole campus · ~600 physical sessions",
-    body: { type: "HOLIDAY", scope: { date: "2026-11-16", name: "Public holiday (declared)" }, reason: "Government declared public holiday", created_by: "dashboard-demo" } },
-];
+function md(text: string) {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((p, i) => (p.startsWith("**") ? <b key={i} className="text-white font-semibold">{p.slice(2, -2)}</b> : <span key={i}>{p}</span>));
+}
 
-export default function Overview() {
-  const { data, error, loading } = useApi<any>("/overview", undefined, 15000);
-  const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
-  const [err, setErr] = useState<unknown>(null);
+function greeting(s: Session, now?: string) {
+  const h = now ? parseInt(now.slice(11, 13)) : 9;
+  const part = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+  if (s.role === "admin") return part;
+  if (s.role === "lecturer") return `${part}, ${s.user}`;
+  return `${part}, ${s.name.split(" ")[0]}`;
+}
 
-  async function launch(s: (typeof SCENARIOS)[number]) {
-    setBusy(s.key);
-    setErr(null);
-    try {
-      const d = await post<any>("/disruptions", s.body);
-      router.push(`/disruptions?id=${d.id}&autoplan=1`);
-    } catch (e) {
-      setErr(e);
-      setBusy(null);
+const PROMPT: Record<string, string> = {
+  admin: "What happened? e.g. “Monday 16 Nov is now a public holiday”",
+  lecturer: "Tell me what you need, e.g. “I'm sick tomorrow, sort out my classes”",
+  student: "Ask about your timetable or attendance",
+};
+
+export default function Home() {
+  const session = useSession();
+  if (!session) return null;
+  return <Assistant session={session} />;
+}
+
+function Assistant({ session }: { session: Session }) {
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [ctx, setCtx] = useState<any>({});
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const { data: sug } = useApi<any>("/assistant/suggestions");
+  const { data: health } = useApi<any>("/health");
+  const endRef = useRef<HTMLDivElement>(null);
+  const idRef = useRef(1);
+  const active = msgs.length > 0;
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+
+  const send: CardAction = async (text, opts) => {
+    const t = text.trim();
+    if (!t || busy) return;
+    const uid = idRef.current++, aid = idRef.current++;
+    setInput("");
+    if (opts?.inject) {
+      const p = opts.inject;
+      const can = session.role === "admin" || (session.role === "lecturer" && p.booking?.lecturer_ids?.includes(session.user));
+      setMsgs((m) => [...m, { id: uid, from: "user", text: t }, {
+        id: aid, from: "assistant", text: `Drafted the booking for **${p.summary.label}**. Approve it and I'll create the calendar invites and a Gmail draft.`,
+        cards: [{ type: "proposal", id: p.id, version: 1, kind: p.kind, title: p.title, status: p.status, summary: p.summary, booking: p.booking, can_approve: can, citations: p.citations, moves: [] }],
+      }]);
+      setCtx({ proposal_id: p.id });
+      return;
     }
+    setMsgs((m) => [...m, { id: uid, from: "user", text: t }, { id: aid, from: "assistant", text: "", pending: true }]);
+    setBusy(true);
+    try {
+      const r = await post<any>("/assistant", { message: t, context: ctx });
+      setCtx(r.context || {});
+      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: r.reply, cards: r.cards } : x)));
+    } catch (e: any) {
+      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: `Something went wrong: ${e.message || e}` } : x)));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const composer = (
+    <div className="composer-wrap">
+      <div className={cn("composer-glow", active && "soft")} />
+    <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="liquid w-full">
+      <div className="relative flex items-end gap-2 p-2.5 pl-5">
+        <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={active ? 1 : 2}
+          onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
+          placeholder={PROMPT[session.role]} aria-label="Message the assistant"
+          className="flex-1 resize-none bg-transparent outline-none text-[16px] leading-6 py-2.5 placeholder:text-white/40" />
+        <button type="button" title="Voice input (not in this prototype)" className="h-10 w-10 rounded-full grid place-items-center text-white/40 hover:text-white hover:bg-white/[0.06]"><Mic className="h-[18px] w-[18px]" /></button>
+        <button type="submit" aria-label="Send" disabled={!input.trim() || busy} className="h-10 w-10 rounded-full grid place-items-center btn-gradient disabled:opacity-40 disabled:shadow-none transition"><ArrowUp className="h-[18px] w-[18px]" /></button>
+      </div>
+      <span className="edge-light" />
+    </form>
+    </div>
+  );
+
+  if (!active) {
+    return (
+      <section className="relative -mx-4 md:-mx-8 -mt-7 overflow-hidden min-h-[calc(100vh-56px)] flex flex-col">
+        <div className="absolute inset-x-0 bottom-0 h-[72%]"><Aurora /></div>
+        <Stardust density={1.3} />
+        <div className="relative flex-1 flex flex-col items-center justify-center px-5 pt-14 pb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px] muted backdrop-blur mb-6">
+            <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" /> Campus Time Ops assistant
+          </div>
+          <h1 className="text-center text-[40px] md:text-[60px] font-semibold tracking-[-0.04em] leading-[1.03]"><span className="text-gradient">{greeting(session, health?.now)}</span></h1>
+          <p className="text-center muted mt-3 text-[17px] max-w-xl">
+            {session.role === "student" ? "Your timetable, changes and attendance. Just ask." : "Describe what happened in plain words. I'll work out the impact, draft a clash-free plan and wait for your approval."}
+          </p>
+          <div className="w-full max-w-[760px] mt-10">{composer}</div>
+          <div className="flex flex-wrap justify-center gap-2 mt-5 max-w-[860px]">
+            {(sug?.suggestions || []).map((s: string) => (
+              <button key={s} onClick={() => send(s)} className="rounded-full border border-white/10 bg-white/[0.05] backdrop-blur px-3.5 py-1.5 text-[13px] text-white/80 hover:bg-white/[0.1] hover:text-white transition">{s}</button>
+            ))}
+          </div>
+        </div>
+        <div className="relative px-4 md:px-8 pb-8"><Glance session={session} /></div>
+      </section>
+    );
   }
 
-  if (loading && !data) return <Spinner />;
-  if (error) return <ErrorBox error={error} />;
-  const k = data.kpis;
   return (
-    <div>
-      <PageHeader title="Overview" subtitle={<>APU&apos;s live timetable ({num(data.rows)} intake-session rows → {num(data.physical_sessions)} physical sessions, {num(data.intakes)} intakes, {num(data.lecturers)} lecturers, {num(data.rooms)} rooms) re-planned by agents — a human approves every step.</>} />
-
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <Stat label="Sessions re-planned" value={num(k.sessions_replanned)} sub={`${k.proposals_executed} executed proposals`} tone="green" />
-        <Stat label="Substitutes found" value={num(k.substitutes_found)} sub="same time & room, no student affected" tone="violet" />
-        <Stat label="Median time to re-plan" value={k.median_time_to_replan_s == null ? "–" : `${k.median_time_to_replan_s}s`} sub="solver wall-clock, measured" tone="accent" />
-        <Stat label="Pending approvals" value={num(k.pending_approvals)} sub="waiting for a human" tone="amber" />
-        <Stat label="Students below threshold" value={num(k.students_below_threshold)} sub={`${num(k.students_at_risk)} at risk (synthetic)`} tone="red" />
-      </div>
-
-      <div className="grid lg:grid-cols-3 gap-4 mt-4">
-        <Card className="lg:col-span-2">
-          <CardHeader title="Try a disruption" subtitle="The three demo prompts. Each creates a disruption, shows its impact and runs the solver — nothing changes until you approve." />
-          <div className="grid md:grid-cols-3 gap-3 p-4 pt-2">
-            {SCENARIOS.map((s) => (
-              <button key={s.key} onClick={() => launch(s)} disabled={!!busy}
-                className="text-left rounded-xl border border-[var(--border)] p-3.5 hover:border-[var(--accent)] hover:bg-[var(--accent-soft)] transition disabled:opacity-60">
-                <s.icon className="h-5 w-5 text-[var(--accent)]" />
-                <div className="font-medium text-sm mt-2 leading-snug">{s.title}</div>
-                <div className="muted text-xs mt-1">{s.sub}</div>
-                <div className="text-xs text-[var(--accent)] mt-2 flex items-center gap-1">{busy === s.key ? "Creating…" : <>Run <ArrowRight className="h-3 w-3" /></>}</div>
-              </button>
-            ))}
+    <div className="max-w-[820px] mx-auto pb-48">
+      <div className="space-y-6">
+        {msgs.map((m) => (
+          <div key={m.id} className={cn("rise", m.from === "user" ? "flex justify-end" : "")}>
+            {m.from === "user" ? (
+              <div className="max-w-[80%] rounded-[22px] rounded-br-md bg-white/[0.08] border border-white/[0.06] px-4 py-2.5 text-[15px]">{m.text}</div>
+            ) : (
+              <div className="flex gap-3">
+                <div className="h-8 w-8 shrink-0 rounded-full btn-gradient grid place-items-center mt-0.5"><Sparkles className="h-4 w-4" /></div>
+                <div className="min-w-0 flex-1 space-y-3">
+                  {m.pending ? (
+                    <div className="text-[14px] muted"><span className="shimmer rounded-full px-3 py-1">Reading the live timetable and running the solver…</span></div>
+                  ) : (
+                    <div className="text-[15px] leading-relaxed text-white/85">{md(m.text)}</div>
+                  )}
+                  {m.cards?.map((c, i) => <RenderCard key={i} c={c} act={send} />)}
+                </div>
+              </div>
+            )}
           </div>
-          {!!err && <div className="px-4 pb-4"><ErrorBox error={err} /></div>}
-        </Card>
-        <Card>
-          <CardHeader title="Sessions per day" subtitle="Physical sessions this week (from the snapshot)" />
-          <div className="h-[170px] px-2 pb-2">
-            <ResponsiveContainer>
-              <BarChart data={data.week_sessions_per_day}>
-                <CartesianGrid vertical={false} stroke="var(--grid)" />
-                <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} width={32} />
-                <Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} cursor={{ fill: "var(--panel-2)" }} />
-                <Bar dataKey="sessions" fill="var(--accent)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+        ))}
+        <div ref={endRef} style={{ scrollMarginBottom: 230 }} />
+      </div>
+      <div className="fixed bottom-0 left-0 md:left-[232px] right-0 z-30 pointer-events-none">
+        <div className="relative h-[200px]">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute inset-x-0 -bottom-16 h-[260px] opacity-80"><Aurora /></div>
+            <Stardust density={0.5} />
           </div>
-        </Card>
+          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[var(--bg)] to-transparent" />
+          <div className="absolute inset-x-0 bottom-6 px-4 pointer-events-auto">
+            <div className="max-w-[820px] mx-auto">
+              {composer}
+              <div className="flex justify-between mt-2 px-2 text-[11px] faint">
+                <span>Plans are drafts until approved · {session.role === "student" ? "read-only" : "Calendar · Gmail drafts · change log"}</span>
+                <button onClick={() => { setMsgs([]); setCtx({}); }} className="hover:text-white">New conversation</button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
+  );
+}
 
-      <div className="grid lg:grid-cols-3 gap-4 mt-4">
-        <Card>
-          <CardHeader title="Active disruptions" right={<Link className="text-xs text-[var(--accent)]" href="/disruptions">All →</Link>} />
-          {data.disruptions_active.length === 0 ? <Empty>No open disruptions.</Empty> : (
-            <ul className="px-4 pb-4 space-y-2">
-              {data.disruptions_active.map((d: any) => (
-                <li key={d.id}>
-                  <Link href={`/disruptions?id=${d.id}`} className="block rounded-lg border border-[var(--border)] p-2.5 hover:bg-[var(--panel-2)]">
-                    <div className="flex items-center gap-2"><Badge tone="red">{d.type.replace("_", " ")}</Badge><span className="text-xs muted">{d.id}</span><Badge>{d.status}</Badge></div>
-                    <div className="text-xs mt-1">{d.headline}</div>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-        <Card>
-          <CardHeader title="Pending approvals" right={<Link className="text-xs text-[var(--accent)]" href="/proposals">All →</Link>} />
-          {data.pending_approvals.length === 0 ? <Empty>Nothing waiting for approval.</Empty> : (
-            <ul className="px-4 pb-4 space-y-2">
-              {data.pending_approvals.map((p: any) => (
-                <li key={p.id}>
-                  <Link href={`/proposals/${p.id}`} className="block rounded-lg border border-[var(--border)] p-2.5 hover:bg-[var(--panel-2)]">
-                    <div className="flex items-center gap-2"><Badge tone="amber">DRAFT</Badge><span className="text-xs muted">{p.id} v{p.version}</span></div>
-                    <div className="text-sm mt-1 font-medium">{p.title}</div>
-                    {p.summary && p.kind === "REPLAN" && <div className="text-xs muted mt-0.5">{p.summary.substituted} substitute · {p.summary.rescheduled} rescheduled · {p.summary.placed_online} online · {p.summary.unresolved} unresolved</div>}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-        <Card>
-          <CardHeader title="Attendance risk" subtitle="Synthetic students, real remaining sessions" right={<Link className="text-xs text-[var(--accent)]" href="/attendance">All →</Link>} />
-          <ul className="px-4 pb-4 space-y-1.5">
-            {data.attendance_top.map((s: any) => (
-              <li key={s.student_id} className="flex items-center justify-between text-sm">
-                <Link href={`/attendance?student=${s.student_id}`} className="hover:underline truncate">{s.name} <span className="muted text-xs">{s.intake}</span></Link>
-                <span className="flex items-center gap-2 shrink-0">
-                  <span className="tabular-nums text-xs">{s.current_percent}%</span>
-                  <Badge tone={s.max_more_absences < 0 ? "red" : "amber"}>{s.max_more_absences < 0 ? "can't reach 80%" : `${s.max_more_absences} more`}</Badge>
-                </span>
-              </li>
-            ))}
-          </ul>
-        </Card>
+function GlanceCard({ title, icon: Icon, href, children }: { title: string; icon: any; href?: string; children: React.ReactNode }) {
+  const body = (
+    <div className="panel h-full p-5 hover:border-white/15 transition">
+      <div className="flex items-center gap-2 text-[12px] muted font-medium"><Icon className="h-4 w-4 text-[var(--accent)]" /> {title}</div>
+      <div className="mt-3">{children}</div>
+    </div>
+  );
+  return href ? <Link href={href} className="block h-full">{body}</Link> : body;
+}
+
+function Glance({ session }: { session: Session }) {
+  const { data: me } = useApi<any>("/me");
+  const { data: ov } = useApi<any>(session.role === "admin" ? "/overview" : null);
+  if (session.role === "admin") {
+    if (!ov) return null;
+    const k = ov.kpis;
+    const max = Math.max(...ov.week_sessions_per_day.map((d: any) => d.sessions), 1);
+    return (
+      <div className="grid md:grid-cols-4 gap-3 max-w-[1200px] mx-auto">
+        <GlanceCard title="Today on campus" icon={CalendarClock} href="/campus">
+          <div className="text-[34px] font-semibold tracking-tight leading-none tabular-nums">{num(ov.today_sessions)}</div>
+          <div className="faint text-[12px] mt-1">physical sessions · ~{num(ov.today_students)} students</div>
+          <div className="flex items-end gap-1.5 h-12 mt-3">
+            {ov.week_sessions_per_day.map((d: any) => <div key={d.date} className="flex-1 rounded-t-md bg-gradient-to-t from-violet-500/40 to-blue-400/80" style={{ height: `${Math.max(4, (d.sessions / max) * 100)}%` }} title={`${d.day} ${d.sessions}`} />)}
+          </div>
+        </GlanceCard>
+        <GlanceCard title="Waiting for approval" icon={ClipboardCheck} href="/proposals">
+          <div className="text-[34px] font-semibold tracking-tight leading-none tabular-nums text-[var(--amber)]">{k.pending_approvals}</div>
+          <div className="faint text-[12px] mt-1">draft plans</div>
+          <div className="mt-3 space-y-1">{ov.pending_approvals.slice(0, 2).map((p: any) => <div key={p.id} className="text-[12px] truncate text-white/75">{p.title}</div>)}</div>
+        </GlanceCard>
+        <GlanceCard title="Re-planned so far" icon={Sparkles} href="/audit">
+          <div className="text-[34px] font-semibold tracking-tight leading-none tabular-nums text-[var(--green)]">{num(k.sessions_replanned)}</div>
+          <div className="faint text-[12px] mt-1">{k.substitutes_found} by substitute · median {k.median_time_to_replan_s ?? "–"}s</div>
+          <SegBar className="mt-4" parts={[{ value: k.substitutes_found, color: "var(--violet)" }, { value: Math.max(0, k.sessions_replanned - k.substitutes_found), color: "var(--green)" }]} />
+        </GlanceCard>
+        <GlanceCard title="Attendance risk" icon={UserRoundCheck} href="/attendance">
+          <div className="text-[34px] font-semibold tracking-tight leading-none tabular-nums text-[var(--red)]">{num(k.students_below_threshold)}</div>
+          <div className="faint text-[12px] mt-1">students below 80% (synthetic)</div>
+          <div className="mt-3 flex items-center gap-2"><Box className="h-3.5 w-3.5 text-[var(--accent)]" /><span className="text-[12px] text-[var(--accent)]">Open the 3D campus →</span></div>
+        </GlanceCard>
       </div>
-      <p className="muted text-[11px] mt-4">Snapshot {data.snapshot?.snapshot_file} · fetched {data.snapshot?.fetched_at ? fmtDate(data.snapshot.fetched_at) : "–"} · window {data.date_coverage.from} → {data.date_coverage.to} · “hours saved” basis: {k.hours_saved_basis}</p>
+    );
+  }
+  if (!me) return null;
+  if (session.role === "student") {
+    const f = me.attendance;
+    const thr = Math.round(f.threshold * 100);
+    return (
+      <div className="grid md:grid-cols-3 gap-3 max-w-[1100px] mx-auto">
+        <GlanceCard title="Attendance" icon={UserRoundCheck} href="/attendance">
+          <div className="flex items-center gap-4">
+            <Ring value={f.current_percent || 0} marker={thr} size={96} stroke={9} color={f.max_more_absences < 0 ? "url(#ringRed)" : f.max_more_absences <= 2 ? "url(#ringAmber)" : "url(#ringGreen)"} label={`${Math.round(f.current_percent)}%`} />
+            <div><div className="text-[22px] font-semibold leading-tight">{f.max_more_absences < 0 ? "At risk" : `${f.max_more_absences} more`}</div><div className="faint text-[12px]">{f.max_more_absences < 0 ? f.binding_module : "classes you can miss"}</div></div>
+          </div>
+        </GlanceCard>
+        <GlanceCard title="Coming up" icon={CalendarClock} href="/week">
+          <div className="space-y-1.5">{me.schedule.slice(0, 4).map((s: any) => <div key={s.id} className="flex gap-2 text-[12.5px]"><span className="mono faint w-[86px] shrink-0">{fmtDate(s.date, { weekday: "short" })} {s.time.slice(0, 5)}</span><span className="truncate">{s.module_name}</span></div>)}</div>
+        </GlanceCard>
+        <GlanceCard title="Changes to my classes" icon={TriangleAlert} href="/week">
+          {me.changes.length === 0 ? <div className="muted text-[13px]">No changes. Everything runs as planned.</div> : (
+            <div className="space-y-1.5">{me.changes.slice(0, 3).map((s: any) => <div key={s.id} className="text-[12.5px]"><span className="text-[var(--green)] font-semibold">MOVED</span> {s.module_name} → {fmtDate(s.date)} {s.time.slice(0, 5)} {s.room}</div>)}</div>
+          )}
+        </GlanceCard>
+      </div>
+    );
+  }
+  const days = Array.from(new Set(me.schedule.map((s: any) => s.date))).slice(0, 6) as string[];
+  return (
+    <div className="grid md:grid-cols-3 gap-3 max-w-[1100px] mx-auto">
+      <GlanceCard title="Your next sessions" icon={CalendarClock} href="/week">
+        <div className="space-y-1.5">{me.schedule.slice(0, 4).map((s: any) => <div key={s.id} className="flex gap-2 text-[12.5px]"><span className="mono faint w-[86px] shrink-0">{fmtDate(s.date, { weekday: "short" })} {s.time.slice(0, 5)}</span><span className="truncate">{s.module_name}</span></div>)}</div>
+      </GlanceCard>
+      <GlanceCard title="Teaching days ahead" icon={Sparkles} href="/week">
+        <div className="flex items-end gap-1.5 h-16">{days.map((d) => { const n = me.schedule.filter((s: any) => s.date === d).length; return <div key={d} className="flex-1 flex flex-col items-center gap-1"><div className="w-full rounded-t-md bg-gradient-to-t from-violet-500/40 to-blue-400/80" style={{ height: `${Math.min(48, n * 16)}px` }} /><span className="faint text-[10px]">{fmtDate(d, { weekday: "short" })}</span></div>; })}</div>
+      </GlanceCard>
+      <GlanceCard title="My requests" icon={ClipboardCheck} href="/proposals">
+        {me.proposals.length === 0 ? <div className="muted text-[13px]">No requests yet. Try “I&apos;m sick tomorrow”.</div> : (
+          <div className="space-y-1.5">{me.proposals.slice(0, 3).map((p: any) => <div key={p.id} className="flex justify-between gap-2 text-[12.5px]"><span className="truncate">{p.title}</span><span className="faint shrink-0">{p.status}</span></div>)}</div>
+        )}
+      </GlanceCard>
     </div>
   );
 }

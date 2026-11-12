@@ -31,11 +31,13 @@
                └────────────────┘  └──────────────┘  └───────────────────────┘
                             ▲
                ┌────────────┴──────────────────────────────────────────────┐
-               │  Ops Dashboard (Next.js on Cloud Run) → /api via a server- │
-               │  side proxy (the token never reaches the browser):         │
-               │  Overview · Disruptions (live re-plan grid) · Proposals    │
-               │  (approve/edit/reject) · Slot Finder · Rooms · Timetable   │
-               │  Health · Attendance Risk · Audit log                      │
+               │  Web app (Next.js on Cloud Run) → /api via a server-side   │
+               │  proxy (token + persona headers added server-side):        │
+               │  persona sign-in → Assistant home (NL → cards → Approve)   │
+               │  admin: 3D Campus · Live board · Approvals · Slot Finder · │
+               │         Rooms · Health · Attendance · Audit                │
+               │  lecturer: My week · My requests · Slot Finder · Campus    │
+               │  student: My timetable · My attendance · Free rooms (3D)   │
                └────────────────────────────────────────────────────────────┘
 ```
 
@@ -62,7 +64,8 @@
 | `backend/app/services/` | `timetable`, `rooms`, `holidays`, `shuttle`, `replan`, `substitutes`, `slots`, `attendance`, `proposals` (lifecycle), `workspace` (Google and local), `audit`, `store` (Firestore and JSON), `policy` (the rule registry parsed from `grounding/campus_ops_policy.md`) |
 | `backend/app/mcp_server.py` | 28 MCP tools. Each wraps a service function and returns structured `{"error": {...}}` on failure |
 | `backend/app/api.py`, `main.py` | REST routes, bearer auth for `/mcp` (and for `/api` writes in the cloud), a rate limit, and the `/outbox` static files |
-| `frontend/` | Next.js dashboard, with `app/api/backend/[...path]` as the token-adding proxy |
+| `backend/app/services/assistant.py`, `identity.py`, `campus.py` | In-app NL assistant (offline intent parser to cards), demo roles and permissions, generated 3D campus layout and per-day room states |
+| `frontend/` | Next.js app: `app/login` (personas), `app/page.tsx` (assistant), `app/campus` + `components/campus/scene.tsx` (three.js), `app/week`, plus the staff pages. `app/api/backend/[...path]` is the proxy that adds the token and persona |
 | `agents/` | Gemini Enterprise configs and instructions, and the ADK fallback |
 
 ## Security and privacy

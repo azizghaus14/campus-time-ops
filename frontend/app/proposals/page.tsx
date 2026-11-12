@@ -3,16 +3,20 @@ import Link from "next/link";
 
 import { Badge, Card, Empty, ErrorBox, PageHeader, Spinner } from "@/components/ui";
 import { fmtDateTime } from "@/lib/format";
+import { useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
 const STATUS_TONE: Record<string, string> = { DRAFT: "amber", APPROVED: "accent", EXECUTED: "green", REJECTED: "red", SUPERSEDED: "neutral", INVALID: "red" };
 
 export default function Proposals() {
-  const { data, error, loading } = useApi<any>("/proposals", undefined, 10000);
-  if (loading && !data) return <Spinner />;
+  const session = useSession();
+  const { data: all, error, loading } = useApi<any>(session && session.role !== "lecturer" ? "/proposals" : null, undefined, 10000);
+  const { data: me } = useApi<any>(session?.role === "lecturer" ? "/me" : null);
+  const data = session?.role === "lecturer" ? (me ? { proposals: me.proposals } : null) : all;
+  if ((loading && !data) || !session) return <Spinner />;
   return (
     <div>
-      <PageHeader title="Proposals" subtitle="Every plan an agent or the dashboard drafted. Only APPROVED proposals can be executed." />
+      <PageHeader title={session.role === "lecturer" ? "My requests" : "Approvals"} subtitle={session.role === "lecturer" ? "Plans drafted for your classes. You approve plans for your own sessions; campus-wide changes go to the timetabling office." : "Every plan an agent or the dashboard drafted. Only APPROVED proposals can be executed."} />
       <ErrorBox error={error} />
       <Card>
         {!data?.proposals?.length ? <Empty>No proposals yet.</Empty> : (

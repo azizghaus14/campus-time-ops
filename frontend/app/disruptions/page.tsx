@@ -26,7 +26,7 @@ function Disruptions() {
   const { data: list, reload } = useApi<any>("/disruptions", undefined, 20000);
   return (
     <div>
-      <PageHeader title="Disruptions" subtitle="Register a disruption, see its impact on the live timetable, and watch the solver re-plan it. Agents in Gemini Enterprise create the same disruptions through MCP." />
+      <PageHeader title="Live board" subtitle="Register a disruption, see its impact on the live timetable, and watch the solver re-plan it. The assistant and the Gemini Enterprise agents create the same disruptions." />
       <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr] gap-4">
         <div className="space-y-4">
           <CreateForm onCreated={(d) => { reload(); router.push(`/disruptions?id=${d.id}`); }} />

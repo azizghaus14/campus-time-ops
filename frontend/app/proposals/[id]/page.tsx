@@ -153,7 +153,7 @@ export default function ProposalPage() {
         </div>
 
         <div className="space-y-4">
-          <Card className="p-4 xl:sticky xl:top-16">
+          <Card className="p-5">
             <div className="font-semibold text-sm flex items-center gap-2"><ShieldCheck className="h-4 w-4" /> Human approval</div>
             <p className="muted text-xs mt-1">Nothing changes until a person approves. Execution creates Calendar events, Gmail <b>drafts</b> (a human sends them) and a change-log entry.</p>
             <ErrorBox error={err} />

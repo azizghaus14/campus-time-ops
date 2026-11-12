@@ -71,7 +71,7 @@ export default function Rooms() {
                   <CartesianGrid horizontal={false} stroke="var(--grid)" />
                   <XAxis type="number" unit="%" tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="block" width={42} tick={{ fontSize: 11, fill: "var(--muted)" }} axisLine={false} tickLine={false} />
-                  <Tooltip contentStyle={{ background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} cursor={{ fill: "var(--panel-2)" }} formatter={(v: any, _n: any, p: any) => [`${v}% (${p.payload.rooms} rooms)`, "utilisation"]} />
+                  <Tooltip contentStyle={{ background: "var(--panel-solid)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }} cursor={{ fill: "var(--panel-2)" }} formatter={(v: any, _n: any, p: any) => [`${v}% (${p.payload.rooms} rooms)`, "utilisation"]} />
                   <Bar dataKey="pct" fill="var(--accent)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>

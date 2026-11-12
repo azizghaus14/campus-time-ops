@@ -268,24 +268,43 @@ def propose_slot(body: SlotProposalIn):
 
 
 # ------------------------------------------------------------- attendance risk (read-only)
+def _staff_only(w: Identity) -> None:
+    if w.role == "student":
+        from .services.errors import Forbidden
+
+        raise Forbidden("ROLE_FORBIDDEN", "Students can only see their own attendance.")
+
+
+def _own_or_staff(w: Identity, student_id: str) -> None:
+    if w.role == "student" and student_id.upper() != (w.user or ""):
+        from .services.errors import Forbidden
+
+        raise Forbidden("ROLE_FORBIDDEN", "Students can only see their own attendance.")
+
+
 @router.get("/attendance/students")
-def students(intake: Optional[str] = None, q: Optional[str] = None, limit: int = 200):
+def students(intake: Optional[str] = None, q: Optional[str] = None, limit: int = 200,
+             x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
+    _staff_only(who(x_demo_role, x_demo_user))
     return attendance.list_students(intake, q, limit)
 
 
 @router.get("/attendance/risk")
-def risk(limit: int = 100):
+def risk(limit: int = 100, x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
+    _staff_only(who(x_demo_role, x_demo_user))
     return attendance.attendance_risk_list(None, limit)
 
 
 @router.get("/attendance/students/{student_id}")
-def student(student_id: str):
+def student(student_id: str, x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
+    _own_or_staff(who(x_demo_role, x_demo_user), student_id)
     rec = attendance.get_student_record(student_id)
     return {"student": {k: rec[k] for k in ("id", "name", "intake", "grouping")}, "forecast": attendance.attendance_forecast(student_id)}
 
 
 @router.get("/attendance/students/{student_id}/records")
-def records(student_id: str):
+def records(student_id: str, x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
+    _own_or_staff(who(x_demo_role, x_demo_user), student_id)
     return attendance.get_attendance(student_id)
 
 

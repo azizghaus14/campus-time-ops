@@ -6,7 +6,7 @@ import { Card, CardHeader, ErrorBox, Input, Label, PageHeader, Spinner, Stat } f
 import { num } from "@/lib/format";
 import { useApi } from "@/lib/use-api";
 
-const tip = { contentStyle: { background: "var(--panel)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }, cursor: { fill: "var(--panel-2)" } };
+const tip = { contentStyle: { background: "var(--panel-solid)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 12 }, cursor: { fill: "var(--panel-2)" } };
 const axis = { tick: { fontSize: 11, fill: "var(--muted)" }, axisLine: false, tickLine: false } as const;
 
 export default function Health() {

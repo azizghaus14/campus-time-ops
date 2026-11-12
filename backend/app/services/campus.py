@@ -19,9 +19,9 @@ from .store import get_store
 from .timetable import parse_date
 
 SITE = {  # building id -> (name, x, z)
-    "B": ("Block B", 0, 0), "A": ("Block A", -36, -8), "C": ("Block C", -34, 22), "D": ("Block D", 34, -12),
-    "E": ("Block E", 36, 18), "S": ("Block S", 2, 34), "TL": ("Tech Labs", 2, -32), "LIB": ("Library", -22, -34),
-    "CYB": ("Cyber Range", 24, -36), "CUL": ("Culinary", -20, 40),
+    "B": ("Block B", 0, 0), "A": ("Block A", -42, -14), "C": ("Block C", -42, 24), "D": ("Block D", 42, -16),
+    "E": ("Block E", 44, 24), "S": ("Block S", 0, 44), "TL": ("Tech Labs", 0, -42), "LIB": ("Library", -40, -48),
+    "CYB": ("Cyber Range", 40, -50), "CUL": ("Culinary", -34, 56),
 }
 CELL = 3.4
 FLOOR_H = 2.6
@@ -69,7 +69,10 @@ def _layout_cached(n_rooms: int) -> dict:
 
 
 def layout() -> dict:
-    return _layout_cached(len(get_dataset().rooms))
+    ds = get_dataset()
+    out = dict(_layout_cached(len(ds.rooms)))
+    out["dates"] = [d.isoformat() for d in ds.dates if d.weekday() < 5 and len(ds.by_date.get(d, [])) > 50]
+    return out
 
 
 def day(date_str: str) -> dict:

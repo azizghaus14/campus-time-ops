@@ -67,3 +67,16 @@ def test_mcp_action_tool_refuses_unapproved(client):
     body = {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "execute_proposal", "arguments": {"proposal_id": "PRO-9999"}}}
     r = client.post("/mcp", json=body, headers={**H, "Authorization": "Bearer t0k"}).json()
     assert "UNKNOWN_PROPOSAL" in r["result"]["content"][0]["text"]
+
+
+def test_student_role_sees_only_own_attendance(client):
+    h = {"x-demo-role": "student", "x-demo-user": "STU-DEMO-01"}
+    assert client.get("/api/attendance/students/STU-DEMO-01", headers=h).status_code == 200
+    assert client.get("/api/attendance/students/STU-DEMO-02", headers=h).status_code == 403
+    assert client.get("/api/attendance/risk", headers=h).status_code == 403
+
+
+def test_lecturer_cannot_declare_holiday_via_rest(client):
+    h = {"x-demo-role": "lecturer", "x-demo-user": "MZD"}
+    r = client.post("/api/disruptions", json={"type": "HOLIDAY", "scope": {"date": "2026-11-16"}}, headers=h)
+    assert r.status_code == 403

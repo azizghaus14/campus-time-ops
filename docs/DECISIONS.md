@@ -99,3 +99,19 @@ Plain arithmetic is not counted as risk. For example, a student at 100% with 3 s
 
 ## D-16 Privacy check result
 None of the 494 real staff names from the raw feed appear anywhere in the repo, the outbox or the state. This was checked against the raw payload, which is never committed. One lecturer's username is the same as their short `LECTID`. `LECTID` is kept on purpose, because the spec needs it for joins (§4.4), so that short code is the only overlap.
+
+## D-17 UI redesign v2: personas, an assistant-first home, and a 3D campus
+- **Roles.** There are three demo personas: Timetabling Office (admin), Lecturer and Student. Each sees only its own menu and home page. The sign-in screen stores the persona in cookies. The Next.js proxy forwards it as `X-Demo-Role` / `X-Demo-User`, and the **backend enforces** the permissions (`services/identity.py`):
+  - Students are read-only, and can see only their own attendance.
+  - Lecturers can report only themselves as unavailable, and can approve plans for their own disruption or a booking they are part of.
+  - Holidays and room closures need an admin.
+  - MCP and agent calls without a role header keep the existing server-side approval rules.
+  - In production, APU single sign-on (IAP or OAuth) replaces the demo sign-in, and the same checks apply.
+- **Assistant-first home.** Every role lands on a chat page. Its natural-language engine (`services/assistant.py`) is **deterministic and offline**: it understands disruptions, edits ("move it to the afternoon", "don't use a substitute"), approve and reject, slot requests, schedules, free rooms and attendance. It calls the same role-checked services and returns rich cards (impact, plan, executed, slots, attendance, schedule, rooms). The approval step stays visible: plans are drafts, and only an explicit "approve" (typed, or the Approve button) applies them. Open-ended language remains the job of the Gemini Enterprise / ADK agents over MCP. We chose a local parser so the demo never depends on network or LLM availability.
+- **3D campus.** Built with three.js (react-three-fiber, drei, and post-processing bloom). The layout is **generated from room codes** (block-floor-room), because APU building geometry is not public, and the UI labels it "schematic".
+  - Modes: live room state (in use, free, affected, proposed or moved here), a day heat map and a week heat map.
+  - A time scrubber with playback.
+  - Clicking a building explodes its floors and filters by floor; clicking a room shows its day timeline.
+  - Computed insights: peak time, busiest building, under-used rooms and disruptions.
+  - Building pins are DOM elements projected every frame, instead of drei `<Html>` portals, which raised root-unmount errors under React 19.
+- **Visual language.** Dark only: near-black with frosted glass surfaces and a violet-to-blue accent. The hero composer is lit from underneath by an animated aurora, with a rim light refracting around the glass edge and stardust particles rising through the glow (canvas). The effects respect `prefers-reduced-motion`. Every page re-uses the same tokens, so the older pages (Live board, Approvals, Rooms, Health, Audit) inherited the new look.
