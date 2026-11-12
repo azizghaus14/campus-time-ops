@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.hypothesis/
+.env
+node_modules/
+frontend/.next/
+frontend/out/
+data/state/
+data/outbox/
+data/raw/
+*.log
+.DS_Store
+secrets/

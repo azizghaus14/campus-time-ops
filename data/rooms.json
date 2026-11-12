@@ -1,0 +1,2117 @@
+[
+ {
+  "name": "A-04-01",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "A",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-04-03",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "A",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-04-04",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "A",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-04-05",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "A",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-05-01",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "A",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-05-03",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "A",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-05-04",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "A",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-05-05",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "A",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-06-01",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "A",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "A-06-03",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "A",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 1 @ Level 7",
+  "type": "auditorium",
+  "capacity": 372,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 2 @ Level 6",
+  "type": "auditorium",
+  "capacity": 264,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 3 @ Block C Level 9",
+  "type": "auditorium",
+  "capacity": 396,
+  "block": "C",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 4 @ Level 3",
+  "type": "auditorium",
+  "capacity": 298,
+  "block": "B",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 5 @ Level 3",
+  "type": "auditorium",
+  "capacity": 333,
+  "block": "B",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 6 @ Block C Level 3",
+  "type": "auditorium",
+  "capacity": 362,
+  "block": "C",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Auditorium 7 @ Block A Level 3",
+  "type": "auditorium",
+  "capacity": 398,
+  "block": "A",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-01-GEOLOGY LAB",
+  "type": "specialist_lab",
+  "capacity": 26,
+  "block": "B",
+  "floor": 1,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-01-RESERVOIR LAB",
+  "type": "specialist_lab",
+  "capacity": 28,
+  "block": "B",
+  "floor": 1,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-02-01-Model Making Studio 1",
+  "type": "specialist_lab",
+  "capacity": 20,
+  "block": "B",
+  "floor": 2,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-02-02-Clay Workshop",
+  "type": "specialist_lab",
+  "capacity": 26,
+  "block": "B",
+  "floor": 2,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-02-03-ID Workshop",
+  "type": "specialist_lab",
+  "capacity": 30,
+  "block": "B",
+  "floor": 2,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-02-07 Model Making Studio 2",
+  "type": "specialist_lab",
+  "capacity": 22,
+  "block": "B",
+  "floor": 2,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-03-CADCAM LAB",
+  "type": "specialist_lab",
+  "capacity": 25,
+  "block": "B",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-03-Design-LAB",
+  "type": "specialist_lab",
+  "capacity": 20,
+  "block": "B",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-03-Robotic LAB",
+  "type": "specialist_lab",
+  "capacity": 29,
+  "block": "B",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-01",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-03",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-04",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-05",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-07",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-08",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-04-09",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-01",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-02",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-03",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-04",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-05",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-06",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-07",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-08",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-09",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-05-10",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-01",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-03",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-04",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-05",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-06",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-07",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-08",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-09",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-06-10",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "B",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-01",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-02",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-03",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-04",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-05",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-06",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-07",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-08",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-07-09",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "B",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-01",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-02",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-03",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-04",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-05",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-06",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-07",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-08",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-08-09",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-01",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-02",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-03",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-04",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-05",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "B-09-06",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "B",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "C-03-01",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "C",
+  "floor": 3,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "C-09-01",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "C",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "C-09-02",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "C",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Culinary Bar Theatre 1",
+  "type": "culinary",
+  "capacity": 28,
+  "block": "CUL",
+  "floor": null,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Culinary Bar Theatre 2",
+  "type": "culinary",
+  "capacity": 22,
+  "block": "CUL",
+  "floor": null,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-01",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-03",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-05",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-06",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-07",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-08",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-09",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-10",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-11",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-12",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-06-13",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "D",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-01",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-03",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-05",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-06",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-07",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-08",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-09",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-10",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-11",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-12",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-13",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-14",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-15",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-16",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-07-17",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-01",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-03",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-04",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-05",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-06",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-07",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-08",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-09",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-10",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-11",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-12",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-13",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-14",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-08-15",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-01",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-03",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-04",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-05",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-07",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-08",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-09",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-10",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-11",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "D-09-12",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "D",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Discussion Room 1 (4th floor Library)",
+  "type": "discussion",
+  "capacity": 11,
+  "block": "LIB",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Discussion Room 2 (4th floor Library)",
+  "type": "discussion",
+  "capacity": 12,
+  "block": "LIB",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Discussion Room 3 (4th floor Library)",
+  "type": "discussion",
+  "capacity": 10,
+  "block": "LIB",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-05-01 (Architecture Studio)",
+  "type": "specialist_lab",
+  "capacity": 28,
+  "block": "E",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-06-01",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "E",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-06-02",
+  "type": "classroom",
+  "capacity": 70,
+  "block": "E",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-06-03",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-06-04",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "E",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-01",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-03",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-04",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-05",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-06",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-07",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-07-09",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-01",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-02",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-03",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-04",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-05",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-06",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-07",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-08",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-09",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-08-10",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-01",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-02",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-03",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-04",
+  "type": "classroom",
+  "capacity": 65,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-05",
+  "type": "classroom",
+  "capacity": 75,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-06",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-07",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-08",
+  "type": "classroom",
+  "capacity": 60,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-09",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-10",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "E-09-11",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "E",
+  "floor": 9,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "ONLINE",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-1",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-10",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-11",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-12",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-13",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-14",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-15",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-16",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-17",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-18",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-19",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-20",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "ONLMCO3-21",
+  "type": "online",
+  "capacity": 0,
+  "block": "ONLINE",
+  "floor": null,
+  "online": true,
+  "air_conditioned": false
+ },
+ {
+  "name": "Presentation Room 1 @ Cyber range",
+  "type": "presentation",
+  "capacity": 22,
+  "block": "CYB",
+  "floor": null,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Presentation Room 2 @ Cyber range",
+  "type": "presentation",
+  "capacity": 38,
+  "block": "CYB",
+  "floor": null,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Presentation Room 3 @ Cyber range",
+  "type": "presentation",
+  "capacity": 23,
+  "block": "CYB",
+  "floor": null,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-04-02",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "S",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-01 (Studio 1)",
+  "type": "specialist_lab",
+  "capacity": 29,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-02",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-03 (Architecture Studio)",
+  "type": "specialist_lab",
+  "capacity": 24,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-04 (Architecture Studio)",
+  "type": "specialist_lab",
+  "capacity": 27,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-05 (Architecture Studio)",
+  "type": "specialist_lab",
+  "capacity": 27,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-05-06 (Architecture Studio)",
+  "type": "specialist_lab",
+  "capacity": 27,
+  "block": "S",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-06-02 (Design Suite)",
+  "type": "specialist_lab",
+  "capacity": 26,
+  "block": "S",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-07-01 (Studio 3)",
+  "type": "specialist_lab",
+  "capacity": 30,
+  "block": "S",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-07-02 (Drawing Studio)",
+  "type": "specialist_lab",
+  "capacity": 23,
+  "block": "S",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-01",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-02",
+  "type": "classroom",
+  "capacity": 45,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-03",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-04",
+  "type": "classroom",
+  "capacity": 50,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-05",
+  "type": "classroom",
+  "capacity": 80,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-06",
+  "type": "classroom",
+  "capacity": 55,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-07",
+  "type": "classroom",
+  "capacity": 40,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "S-08-08 (Studio 2)",
+  "type": "specialist_lab",
+  "capacity": 27,
+  "block": "S",
+  "floor": 8,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 4-01",
+  "type": "lab",
+  "capacity": 42,
+  "block": "TL",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 4-02",
+  "type": "lab",
+  "capacity": 37,
+  "block": "TL",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 4-03",
+  "type": "lab",
+  "capacity": 41,
+  "block": "TL",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 4-04",
+  "type": "lab",
+  "capacity": 42,
+  "block": "TL",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 4-07",
+  "type": "lab",
+  "capacity": 38,
+  "block": "TL",
+  "floor": 4,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 5-01 Financial Trading Centre",
+  "type": "specialist_lab",
+  "capacity": 28,
+  "block": "TL",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 5-02 Cisco Lab",
+  "type": "specialist_lab",
+  "capacity": 25,
+  "block": "TL",
+  "floor": 5,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-01",
+  "type": "lab",
+  "capacity": 38,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-02",
+  "type": "lab",
+  "capacity": 36,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-03",
+  "type": "lab",
+  "capacity": 39,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-04",
+  "type": "lab",
+  "capacity": 42,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-05",
+  "type": "lab",
+  "capacity": 43,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-06",
+  "type": "lab",
+  "capacity": 45,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-07",
+  "type": "lab",
+  "capacity": 34,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-08",
+  "type": "lab",
+  "capacity": 30,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-09",
+  "type": "lab",
+  "capacity": 36,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-10 (ID Suite)",
+  "type": "specialist_lab",
+  "capacity": 25,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-11",
+  "type": "lab",
+  "capacity": 45,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-12 (Pixels Suite)",
+  "type": "specialist_lab",
+  "capacity": 22,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-13",
+  "type": "lab",
+  "capacity": 37,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-14",
+  "type": "lab",
+  "capacity": 31,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-15 (CGI Suite)",
+  "type": "specialist_lab",
+  "capacity": 23,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-16 (iMac Suite)",
+  "type": "specialist_lab",
+  "capacity": 29,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-17 (Animation Suite)",
+  "type": "specialist_lab",
+  "capacity": 20,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-18 (VFX Suite)",
+  "type": "specialist_lab",
+  "capacity": 30,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 6-19 (Greenscreen)",
+  "type": "specialist_lab",
+  "capacity": 21,
+  "block": "TL",
+  "floor": 6,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 7-01",
+  "type": "lab",
+  "capacity": 34,
+  "block": "TL",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ },
+ {
+  "name": "Tech Lab 7-02",
+  "type": "lab",
+  "capacity": 36,
+  "block": "TL",
+  "floor": 7,
+  "online": false,
+  "air_conditioned": true
+ }
+]

@@ -1,0 +1,216 @@
+{
+ "source": "https://apu.edu.my/node/501/ (APU Holiday Schedule 2026, 'Updated: 12 Dec 2025'), transcribed and verified 2026-11-12",
+ "note": "* Subject to change by the Authorities. When a public holiday falls on a Sunday, the following day becomes a public holiday.",
+ "holidays": [
+  {
+   "date": "2026-01-01",
+   "name": "New Year's Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-01",
+   "name": "Federal Territory Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-01",
+   "name": "Thaipusam",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-02",
+   "name": "Federal Territory Day (in lieu of Sunday)",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-03",
+   "name": "Thaipusam (in lieu of Sunday)",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-16",
+   "name": "Additional Holiday Chinese New Year",
+   "type": "university"
+  },
+  {
+   "date": "2026-02-17",
+   "name": "Chinese New Year",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-18",
+   "name": "Chinese New Year",
+   "type": "public"
+  },
+  {
+   "date": "2026-02-19",
+   "name": "Additional Holiday Chinese New Year",
+   "type": "university"
+  },
+  {
+   "date": "2026-02-20",
+   "name": "Additional Holiday Chinese New Year",
+   "type": "university"
+  },
+  {
+   "date": "2026-02-21",
+   "name": "Chinese New Year break (university)",
+   "type": "university"
+  },
+  {
+   "date": "2026-03-07",
+   "name": "Nuzul Al-Quran",
+   "type": "public"
+  },
+  {
+   "date": "2026-03-20",
+   "name": "Additional Holiday Hari Raya Puasa",
+   "type": "university"
+  },
+  {
+   "date": "2026-03-21",
+   "name": "Hari Raya Puasa*",
+   "type": "public"
+  },
+  {
+   "date": "2026-03-22",
+   "name": "Hari Raya Puasa*",
+   "type": "public"
+  },
+  {
+   "date": "2026-03-23",
+   "name": "Hari Raya Puasa* (in lieu of Sunday)",
+   "type": "public"
+  },
+  {
+   "date": "2026-03-24",
+   "name": "Additional Holiday Hari Raya Puasa",
+   "type": "university"
+  },
+  {
+   "date": "2026-05-01",
+   "name": "Labour Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-05-27",
+   "name": "Hari Raya Qurban*",
+   "type": "public"
+  },
+  {
+   "date": "2026-05-31",
+   "name": "Wesak Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-06-01",
+   "name": "Birthday of S.P.B. Yang di-Pertuan Agong",
+   "type": "public"
+  },
+  {
+   "date": "2026-06-02",
+   "name": "Wesak Day (in lieu of Sunday)",
+   "type": "public"
+  },
+  {
+   "date": "2026-06-17",
+   "name": "Awal Muharram (Maal Hijrah)",
+   "type": "public"
+  },
+  {
+   "date": "2026-08-25",
+   "name": "Birthday of Prophet Muhammad S.A.W (Maulidur Rasul)",
+   "type": "public"
+  },
+  {
+   "date": "2026-08-31",
+   "name": "National Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-09-16",
+   "name": "Malaysia Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-11-07",
+   "name": "Deepavali (university additional holiday)",
+   "type": "university"
+  },
+  {
+   "date": "2026-11-08",
+   "name": "Deepavali*",
+   "type": "public"
+  },
+  {
+   "date": "2026-11-09",
+   "name": "Deepavali* (in lieu of Sunday)",
+   "type": "public"
+  },
+  {
+   "date": "2026-12-21",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-22",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-23",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-24",
+   "name": "Additional Holiday Christmas Day",
+   "type": "university"
+  },
+  {
+   "date": "2026-12-25",
+   "name": "Christmas Day",
+   "type": "public"
+  },
+  {
+   "date": "2026-12-26",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-27",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-28",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-29",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-30",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2026-12-31",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2027-01-01",
+   "name": "Year End Break",
+   "type": "break"
+  },
+  {
+   "date": "2027-01-02",
+   "name": "Year End Break",
+   "type": "break"
+  }
+ ]
+}

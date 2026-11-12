@@ -1,0 +1,24 @@
+{
+  "source": "https://publicwebsite-media.apu.edu.my/assets/2026-10/2026Oct22_APU-SHUTTLE-SERVICES.pdf (Version V1_20261022, effective 22 October 2026)",
+  "verified": "2026-11-12: newest PDF found via apu.edu.my; supersedes the WEF-20250403 PDF (which is a 2-day Hari Raya special) and WEF-20241223 (now 404).",
+  "extraction": "Transcribed by hand from pypdf text extraction; multi-column tables extract out of order, so per-stop last departures are marked VERIFY.",
+  "service_days": ["MON", "TUE", "WED", "THU", "FRI"],
+  "notes": [
+    "Timetables are published for Monday-Friday only; no Saturday/Sunday service is listed (treated as no shuttle).",
+    "'**' trips (20:45, 21:45) are 'Limited space only'.",
+    "Public holidays and university holidays: reduced frequency (holiday page); treated as no service for make-up planning."
+  ],
+  "stops": [
+    {"code": "LRT", "name": "LRT Bukit Jalil", "last_regular": "19:15", "last_limited": "21:45", "verify": false},
+    {"code": "COG", "name": "City of Green", "last_regular": "19:00", "last_limited": "21:45", "verify": true},
+    {"code": "FPARK", "name": "Fortune Park / One South", "last_regular": "18:10", "last_limited": null, "verify": true},
+    {"code": "UNIS", "name": "UniStay @ Kingston", "last_regular": "19:15", "last_limited": null, "verify": true},
+    {"code": "BVHM", "name": "Bloomsvale / Harmony", "last_regular": "18:45", "last_limited": null, "verify": true},
+    {"code": "BJ", "name": "Bayu Jalil", "last_regular": "18:15", "last_limited": null, "verify": true},
+    {"code": "MV", "name": "M Vertica", "last_regular": "18:45", "last_limited": null, "verify": true},
+    {"code": "KS", "name": "Kuchai Sentral", "last_regular": "18:30", "last_limited": null, "verify": true},
+    {"code": "DV", "name": "D'Ivo", "last_regular": "18:30", "last_limited": null, "verify": true},
+    {"code": "PH", "name": "Parkhill", "last_regular": "19:15", "last_limited": null, "verify": true}
+  ],
+  "campus_rule_stop": "LRT"
+}

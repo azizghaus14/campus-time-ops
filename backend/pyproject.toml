@@ -1,0 +1,30 @@
+[project]
+name = "campus-time-ops"
+version = "0.1.0"
+description = "AI operations layer on APU's live timetable: replan, slot finder, visa guardian"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.30",
+  "mcp[cli]>=1.9,<2",
+  "ortools>=9.12",
+  "pydantic>=2.7",
+  "requests>=2.32",
+  "python-dotenv>=1.0",
+  "pillow>=10.0",
+  "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+google = [
+  "google-cloud-firestore>=2.16",
+  "google-api-python-client>=2.130",
+  "google-auth>=2.30",
+  "google-auth-oauthlib>=1.2",
+  "google-genai>=1.0",
+]
+dev = ["pytest>=8", "hypothesis>=6.100", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
