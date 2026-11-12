@@ -1,0 +1,33 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "/Users/azizghaus/Documents/Hackthon/.venv/bin/python",
+      "runtimeArgs": [
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--app-dir",
+        "/Users/azizghaus/Documents/Hackthon/backend",
+        "--port",
+        "8000"
+      ],
+      "port": 8000
+    },
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/azizghaus/Documents/Hackthon/frontend",
+        "run",
+        "dev"
+      ],
+      "port": 3100,
+      "env": {
+        "PORT": "3100"
+      }
+    }
+  ]
+}

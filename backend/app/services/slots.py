@@ -62,8 +62,8 @@ def find_common_slots(
     rtype = rr.get("type")
     online = rtype == "online" or rr.get("online") is True
     headcount = int(rr.get("min_capacity") or 0)
-    if not headcount and gs:
-        headcount = sum(ds.group_sizes.get(g, 0) for g in gs) + len(lects) if count == 1 else 1 + len(lects)
+    if not headcount:
+        headcount = (sum(ds.group_sizes.get(g, 0) for g in gs) + len(lects)) if (gs and count == 1) else 1 + len(lects)
     a = parse_date((window or {}).get("start") or settings.now().date())
     b = parse_date((window or {}).get("end") or (a + timedelta(days=7)))
     require(a <= b and (b - a).days <= 31, "BAD_WINDOW", "window must be <= 31 days")
@@ -139,7 +139,8 @@ def find_common_slots(
                 "date": d.isoformat(), "day": d.strftime("%a"), "start": iso(d, st), "end": iso(d, en),
                 "label": f"{d.strftime('%a %d %b')} {hhmm(st)}-{hhmm(en)}",
                 "rooms": rooms[:5], "room": rooms[0], "score": round(score, 1),
-                "reason": f"All {len(gs)} group(s) and {len(lects)} examiner(s) free; {rooms[0]}" + (f" (cap {ds.rooms[rooms[0]].capacity} >= {headcount})" if not online else "") + "; " + ", ".join(why),
+                "reason": (" and ".join(x for x in [f"all {len(gs)} group(s)" if gs else "", f"all {len(lects)} examiner(s)" if lects else ""] if x).capitalize()
+                           + f" free; {rooms[0]}" + (f" (cap {ds.rooms[rooms[0]].capacity} >= {headcount})" if not online else "") + "; " + ", ".join(why)),
                 "sub_slots": [{"start": iso(d, st + i * (int(duration_min) + int(gap_min))), "end": iso(d, st + i * (int(duration_min) + int(gap_min)) + int(duration_min))} for i in range(int(count))] if count > 1 else None,
             })
         d += timedelta(days=1)

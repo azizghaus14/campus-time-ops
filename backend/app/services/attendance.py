@@ -263,9 +263,12 @@ def _risk(f: dict) -> tuple[int, list[str]]:
     if f["max_more_absences"] < 0:
         score += 100
         reasons.append(f"cannot reach {thr:.0f}% in {f['binding_module']}")
-    elif f["max_more_absences"] <= 3:
-        score += 60 - 10 * f["max_more_absences"]
-        reasons.append(f"only {f['max_more_absences']} more absence(s) allowed in {f['binding_module']}")
+    else:
+        bm = next((m for m in f["per_module"] if m["module"] == f["binding_module"]), None)
+        slipping = bm is not None and bm["percent"] is not None and bm["percent"] < 90
+        if slipping and f["max_more_absences"] <= 2:
+            score += {0: 50, 1: 35, 2: 20}[f["max_more_absences"]]
+            reasons.append(f"only {f['max_more_absences']} more absence(s) allowed in {f['binding_module']} ({bm['percent']:.0f}% so far)")
     if cur < thr:
         score += 40
         reasons.append(f"currently {cur}% < {thr:.0f}%")
@@ -284,7 +287,7 @@ def _risk(f: dict) -> tuple[int, list[str]]:
     return score, reasons
 
 
-def attendance_risk_list(date_str: Optional[str] = None, limit: int = 100, min_score: int = 20) -> dict:
+def attendance_risk_list(date_str: Optional[str] = None, limit: int = 100, min_score: int = 30) -> dict:
     """Ranked, read-only list of students below or heading towards the threshold."""
     t0 = datetime.now()
     rows, below = [], 0
