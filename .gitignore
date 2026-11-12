@@ -13,3 +13,5 @@ data/raw/
 *.log
 .DS_Store
 secrets/
+client.json
+token.json

@@ -1,82 +1,111 @@
-# Google Cloud and Workspace setup (fresh project)
+# Setup from zero (personal Google account, no organiser resources)
 
-Every value in angle brackets is yours. The region is **asia-southeast1** throughout.
+Everything below works with **one personal Google account** (e.g. a Gmail address) and the **Google Cloud free trial**. You do not need to buy a domain or Google Workspace. Region: `asia-southeast1`.
 
-## 1. Project and tools
+## A. Accounts to create (about 10 minutes)
+1. **A Google account** for the team. A fresh Gmail is cleanest, e.g. `campustimeops.demo@gmail.com`. All demo emails and invites go to `+` aliases of this inbox, so nothing ever reaches a real person.
+2. **Google Cloud free trial** at https://cloud.google.com/free, signed in with that account. You get **US$300 credit for 90 days**. A credit or debit card is needed only to verify identity: you are not charged unless you manually upgrade to a paid account. This project costs a few dollars of credit at most.
+3. **A project:** in the console, create a project (e.g. `campus-time-ops`) and note its **Project ID**.
+4. **A GitHub account and an empty repository** for the submission.
+
+## B. Deploy (your laptop, about 15 minutes)
+```bash
+brew install --cask google-cloud-sdk
+```
 ```bash
 gcloud auth login
 ```
 ```bash
-gcloud config set project <GCP_PROJECT>
+gcloud config set project <PROJECT_ID>
 ```
-You need billing enabled, Docker (optional: the deploy uses Cloud Build) and `make`.
-
-## 2. Deploy the backend and dashboard
 ```bash
-GCP_PROJECT=<GCP_PROJECT> WORKSPACE_DEMO_DOMAIN=<demo-domain> make deploy
+GCP_PROJECT=<PROJECT_ID> WORKSPACE_DEMO_INBOX=<your-demo-gmail> make deploy
 ```
 `scripts/deploy.sh` does the following:
-- enables Cloud Run, Artifact Registry, Cloud Build, Secret Manager and Firestore
-- creates the `campus-time-ops` service account with **datastore.user**, **secretmanager.secretAccessor** and **aiplatform.user**
-- creates the `MCP_AUTH_TOKEN` secret, with a random value if you don't supply one
-- builds both images and deploys:
-  - `campus-time-ops-api`: REST at `/api` and MCP at `/mcp`, with Firestore state and a single instance (D-12)
-  - `campus-time-ops-dashboard`: Next.js, which proxies to the API with the token injected from Secret Manager
+- turns on Cloud Run, Cloud Build, Artifact Registry, Secret Manager, Firestore, Vertex AI, Calendar, Gmail, Docs and Drive
+- creates the Firestore database and a least-privilege service account
+- generates the `MCP_AUTH_TOKEN` secret
+- builds and deploys the **API** and the **web app**, then prints both URLs
 
-Create the Firestore database once, in Native mode, before the first deploy:
-```bash
-gcloud firestore databases create --location=asia-southeast1
-```
-Then seed a clean state:
+Seed a clean demo state:
 ```bash
 BACKEND_URL=<api-url> MCP_AUTH_TOKEN=$(gcloud secrets versions access latest --secret MCP_AUTH_TOKEN) make reset-demo
 ```
+At this point the whole product works online. Calendar, email and change-log outputs are created as files you can open from each executed plan. To make them real Google items, do step C.
 
-## 3. Demo Workspace accounts (never real APU accounts)
-1. In a demo Workspace domain, create `timetabling@`, `programme-leader@` and a few lecturer and student accounts. Address formats: lecturer `lect-<id>@<domain>`, intake `<intake>@students.<domain>`.
-2. In Google Cloud, create an **OAuth client** of type "Desktop app". Run the consent flow once as `timetabling@<domain>`, with these scopes:
-   `calendar.events`, `gmail.compose` (drafts only), `documents` and `drive.file`. This produces an `authorized_user` token JSON.
+## C. Real Google Calendar events, Gmail drafts and a change-log Google Doc (optional, about 15 minutes)
+1. In the Cloud console, open **Google Auth Platform**.
+   - **Branding:** set an app name and the support email.
+   - **Audience:** choose External, leave it in **Testing**, and add your demo Gmail as a **test user**.
+2. Under **Clients**, create a client of type **Desktop app**, and download the JSON as `client.json`.
+3. Run this once on your laptop, then sign in with the demo Gmail:
    ```bash
-   python -c "from google_auth_oauthlib.flow import InstalledAppFlow as F; c=F.from_client_secrets_file('client.json',['https://www.googleapis.com/auth/calendar.events','https://www.googleapis.com/auth/gmail.compose','https://www.googleapis.com/auth/documents','https://www.googleapis.com/auth/drive.file']).run_local_server(port=0); open('token.json','w').write(c.to_json())"
+   .venv/bin/pip install google-auth-oauthlib
    ```
-3. Store the token as a secret:
+   ```bash
+   .venv/bin/python -c "from google_auth_oauthlib.flow import InstalledAppFlow as F; c=F.from_client_secrets_file('client.json',['https://www.googleapis.com/auth/calendar.events','https://www.googleapis.com/auth/gmail.compose','https://www.googleapis.com/auth/documents','https://www.googleapis.com/auth/drive.file']).run_local_server(port=0); open('token.json','w').write(c.to_json())"
+   ```
+4. Store the token and redeploy:
    ```bash
    gcloud secrets create GOOGLE_OAUTH_TOKEN --data-file=token.json
    ```
-   Then re-run `make deploy`. The script detects the secret, mounts it, and switches the API to `WORKSPACE_MODE=google`.
-4. Optional: create a Google Doc named "Timetable Change Log" and set its ID as `CHANGELOG_DOC_ID`. Otherwise the first execution creates the Doc.
+   ```bash
+   GCP_PROJECT=<PROJECT_ID> WORKSPACE_DEMO_INBOX=<your-demo-gmail> make deploy
+   ```
+   The script sees the secret and switches the API to `WORKSPACE_MODE=google`.
 
-## 4. Gemini Enterprise (primary agent path, D-02)
-1. In the Google Cloud console, open **Gemini Enterprise → Apps**, then create an app (or open the hackathon app).
-2. Under **Data stores**, add an *unstructured* data store named `campus-ops-grounding` and upload the files in `grounding/`: the handbook PDF, the holiday page, the shuttle PDF and `campus_ops_policy.md`.
-3. Under **Connectors / Tools**, add a **third-party MCP server**:
-   - URL: `<api-url>/mcp`, using the streamable HTTP transport
-   - Auth: bearer token, the value of the `MCP_AUTH_TOKEN` secret
-   - **VERIFY:** whether your edition supports custom MCP servers and which auth types it accepts. If it only accepts OAuth or IAP, put the API behind IAP and grant the Gemini Enterprise service agent access.
-4. Create an agent **Replan**: paste `agents/replan/instructions.md`, attach the MCP tools listed in `agents/replan/config.yaml` and the data store, and turn on user confirmation for `approve_proposal` and `execute_proposal`. Do the same for **Slot Finder**.
-5. Test with the `test_prompts` in each `config.yaml`.
+⚠️ **Testing-mode tokens expire after 7 days.** Redo step 3 and update the secret before you record the video and before judging:
+```bash
+gcloud secrets versions add GOOGLE_OAUTH_TOKEN --data-file=token.json
+```
+Never commit `client.json` or `token.json`. Both are already git-ignored by the `secrets/` convention, so keep them in `secrets/`.
 
-## 5. ADK fallback (if step 4 isn't possible in your tenant)
+## D. The agents: choose a path
+**Path 1: ADK + Gemini on Vertex AI (recommended).** It needs nothing beyond step B. It uses the same project and the free-trial credit.
 ```bash
-pip install google-adk
+.venv/bin/pip install google-adk
 ```
 ```bash
-export GOOGLE_GENAI_USE_VERTEXAI=true GOOGLE_CLOUD_PROJECT=<GCP_PROJECT> GOOGLE_CLOUD_LOCATION=asia-southeast1 CAMPUS_MCP_URL=<api-url>/mcp MCP_AUTH_TOKEN=<token>
+gcloud auth application-default login
 ```
 ```bash
-adk web agents
+export GOOGLE_GENAI_USE_VERTEXAI=true GOOGLE_CLOUD_PROJECT=<PROJECT_ID> GOOGLE_CLOUD_LOCATION=global CAMPUS_MCP_URL=<api-url>/mcp MCP_AUTH_TOKEN=$(gcloud secrets versions access latest --secret MCP_AUTH_TOKEN)
 ```
-To deploy to Vertex AI Agent Engine instead:
 ```bash
-adk deploy agent_engine --project <GCP_PROJECT> --region asia-southeast1 agents/adk_app
+cd agents && ../.venv/bin/adk web
 ```
-Record which path you used in `docs/DECISIONS.md` D-02.
+This opens a chat UI with the Replan and Slot Finder agents calling your live MCP server. Set `GEMINI_MODEL` to the newest Gemini available in Vertex AI Model Garden.
 
-## 6. Local development
+**Path 2: Gemini Enterprise (30-day free trial).** This is optional and riskier. Its custom MCP connector:
+- uses **OAuth only**
+- is **blocked by a managed organization policy** that you must override, which needs the Organization Policy Administrator role; a personal account without a Google Cloud organization may not be able to change it
+
+If you try it:
+1. Activate the trial: Cloud console → Gemini Enterprise → create an app → accept the 30-day trial.
+2. Create a **Web application** OAuth client with the redirect URI `https://vertexaisearch.cloud.google.com/oauth-redirect`.
+3. Redeploy with the OAuth settings:
+   ```bash
+   MCP_GOOGLE_CLIENT_IDS=<that-client-id> MCP_ALLOWED_EMAILS=<your-demo-gmail> GCP_PROJECT=<PROJECT_ID> WORKSPACE_DEMO_INBOX=<your-demo-gmail> make deploy
+   ```
+4. In Gemini Enterprise, open **Connected data stores → New data store → Custom MCP Server**. Enter:
+   - **MCP server URL:** `<api-url>/mcp`
+   - **Authorization URL:** `https://accounts.google.com/o/oauth2/auth`
+   - **Token URL:** `https://oauth2.googleapis.com/token`
+   - **Client ID and secret** from the Web client in step 2
+   - **Scopes:** `openid email`
+5. Click **Verify Auth**, create the store, then open **Actions → Reload custom actions → Enable**.
+6. Create agents with `agents/replan/instructions.md` and `agents/slot_finder/instructions.md`.
+
+If the org-policy step is blocked, use Path 1 and record which path you used in `docs/DECISIONS.md` (D-02).
+
+## E. Local development
 ```bash
 make setup
 ```
 ```bash
 make dev
 ```
-The backend runs on :8000 and the dashboard on :3000. For Firestore instead of JSON files, set `STORE_BACKEND=firestore` before `make dev`; this starts the emulator (gcloud required).
+The API runs on :8000 and the web app on :3000. If port 3000 is in use, run:
+```bash
+PORT=3100 make frontend
+```

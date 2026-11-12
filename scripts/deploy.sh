@@ -54,7 +54,7 @@ gcloud run deploy campus-time-ops-api --image "$BACKEND_IMG" --region "$REGION" 
   --service-account "$SA" --allow-unauthenticated --memory 2Gi --cpu 2 --min-instances 1 --max-instances 1 \
   --concurrency 40 --timeout 120 \
   --set-secrets "$SECRETS" \
-  --set-env-vars "STORE_BACKEND=firestore,GCP_PROJECT=$PROJECT,DATA_MODE=${DATA_MODE:-snapshot},WORKSPACE_DEMO_DOMAIN=${WORKSPACE_DEMO_DOMAIN:-demo.example.edu},REQUIRE_API_AUTH=true,GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-pro}$EXTRA_ENV"
+  --set-env-vars "^|^STORE_BACKEND=firestore|GCP_PROJECT=$PROJECT|DATA_MODE=${DATA_MODE:-snapshot}|WORKSPACE_DEMO_DOMAIN=${WORKSPACE_DEMO_DOMAIN:-demo.example.edu}|WORKSPACE_DEMO_INBOX=${WORKSPACE_DEMO_INBOX:-}|MCP_GOOGLE_CLIENT_IDS=${MCP_GOOGLE_CLIENT_IDS:-}|MCP_ALLOWED_EMAILS=${MCP_ALLOWED_EMAILS:-}|REQUIRE_API_AUTH=true|GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-pro}${EXTRA_ENV//,/|}"
 API_URL="$(gcloud run services describe campus-time-ops-api --region "$REGION" --project "$PROJECT" --format 'value(status.url)')"
 gcloud run services update campus-time-ops-api --region "$REGION" --project "$PROJECT" --update-env-vars "PUBLIC_BASE_URL=$API_URL" >/dev/null
 

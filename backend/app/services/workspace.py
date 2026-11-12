@@ -11,6 +11,7 @@ These functions are only ever called from proposals.execute_* which enforces an 
 from __future__ import annotations
 
 import json
+import os
 import re
 import uuid
 from dataclasses import dataclass
@@ -43,25 +44,48 @@ class Draft:
     body: str
 
 
+def _inbox() -> Optional[tuple[str, str]]:
+    """WORKSPACE_DEMO_INBOX=you@gmail.com -> every demo recipient becomes a '+' alias of that one inbox
+    (you+lect-mzd@gmail.com), so a personal Google account works and nothing can reach a real person."""
+    box = os.environ.get("WORKSPACE_DEMO_INBOX", "").strip().lower()
+    if "@" in box:
+        local, dom = box.split("@", 1)
+        return local, dom
+    return None
+
+
+def _addr(tag: str, sub: str = "") -> str:
+    tag = re.sub(r"-{2,}", "-", re.sub(r"[^a-z0-9._-]+", "-", tag.lower())).strip("-")
+    ib = _inbox()
+    if ib:
+        return f"{ib[0]}+{tag}@{ib[1]}"
+    return f"{tag}@{sub}{settings.workspace_demo_domain}"
+
+
 def addr_lecturer(lid: str) -> str:
-    return f"lect-{lid.lower()}@{settings.workspace_demo_domain}"
+    return _addr(f"lect-{lid}")
 
 
 def addr_intake(intake: str, grouping: Optional[str] = None) -> str:
-    g = f"-{grouping.lower()}" if grouping else ""
-    return f"{intake.lower()}{g}@students.{settings.workspace_demo_domain}"
+    g = f"-{grouping}" if grouping else ""
+    return _addr(f"{intake}{g}", "students.")
 
 
 def addr_role(role: str) -> str:
-    return f"{role}@{settings.workspace_demo_domain}"
+    return _addr(role)
 
 
 def _guard(addrs: list[str]) -> None:
+    ib = _inbox()
     dom = settings.workspace_demo_domain.lower()
     for a in addrs:
         a = a.lower()
-        if not (a.endswith("@" + dom) or a.endswith("." + dom)):
-            raise Forbidden("NON_DEMO_RECIPIENT", f"Refusing recipient outside demo domain: {a}")
+        if ib:
+            ok = a.endswith("@" + ib[1]) and (a.split("@")[0] == ib[0] or a.split("@")[0].startswith(ib[0] + "+"))
+        else:
+            ok = a.endswith("@" + dom) or a.endswith("." + dom)
+        if not ok:
+            raise Forbidden("NON_DEMO_RECIPIENT", f"Refusing recipient outside the demo inbox/domain: {a}")
 
 
 class Workspace(Protocol):

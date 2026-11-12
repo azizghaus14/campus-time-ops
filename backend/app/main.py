@@ -15,6 +15,7 @@ from .api import router
 from .config import settings
 from .data.loader import get_dataset
 from .mcp_server import mcp
+from .services import oauth as google_oauth
 from .services.errors import ToolError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -63,8 +64,16 @@ async def auth_and_rate_limit(request: Request, call_next):
     token = settings.mcp_auth_token
     needs = token and (path.startswith("/mcp") or (path.startswith("/api") and request.method != "GET" and _api_auth_required()))
     if needs and not path.startswith(_OPEN_PATHS):
-        if request.headers.get("authorization", "") != f"Bearer {token}":
-            return JSONResponse({"error": {"code": "UNAUTHORIZED", "message": "missing or invalid bearer token"}}, status_code=401)
+        auth = request.headers.get("authorization", "")
+        if auth != f"Bearer {token}":
+            # Gemini Enterprise custom MCP connector: Google OAuth access token (see services/oauth.py)
+            ok = False
+            if path.startswith("/mcp") and auth.startswith("Bearer ") and google_oauth.enabled():
+                import asyncio
+
+                ok = bool(await asyncio.to_thread(google_oauth.verify, auth[7:]))
+            if not ok:
+                return JSONResponse({"error": {"code": "UNAUTHORIZED", "message": "missing or invalid bearer token"}}, status_code=401)
     return await call_next(request)
 
 
