@@ -9,6 +9,8 @@
 | Room unavailable (the 5 busiest classrooms, Mon–Fri) | 5 | 101 | 0.067 s | 0.077 s | ✅ all |
 | Whole-campus holiday (Mon 16, Tue 17, Wed 18 Nov) | 3 | 1,806 | **2.57 s** | 2.63 s | ✅ all |
 
+On a **2-core machine** (GitHub Actions runner, comparable to a 2-vCPU Cloud Run instance) the same holiday solve finishes in about **7–8.5 s**: CP-SAT uses one worker per core and stops within 0.5% of the proven bound, with a 7 s budget that includes preparation. The plan quality is identical (561 physical, 36 online, 1 unresolved). The CI test enforces the under-10 s target on every push.
+
 Every solve is followed by an independent clash checker that compares each moved session against the whole timetable. Every case reported zero group, lecturer or room clashes. A whole-campus holiday solves as **one CP-SAT model to OPTIMAL in about 2.5 s**, well under the 10-second target. Splitting by school is also implemented and tested.
 
 ## How sessions were resolved
