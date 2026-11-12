@@ -46,7 +46,7 @@ class Settings:
     gemini_model: str = os.environ.get("GEMINI_MODEL", "gemini-2.5-pro")
     mcp_auth_token: str = os.environ.get("MCP_AUTH_TOKEN", "")
     rate_limit_per_min: int = int(os.environ.get("RATE_LIMIT_PER_MIN", "120"))
-    public_base_url: str = os.environ.get("PUBLIC_BASE_URL", "http://localhost:8000")
+    public_base_url: str = os.environ.get("PUBLIC_BASE_URL") or os.environ.get("RENDER_EXTERNAL_URL", "http://localhost:8000")
     dashboard_base_url: str = os.environ.get("DASHBOARD_BASE_URL", "http://localhost:3000")
 
     data_dir: Path = field(default_factory=lambda: Path(os.environ.get("DATA_DIR", REPO_ROOT / "data")))

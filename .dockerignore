@@ -1,7 +1,10 @@
 .venv
 **/node_modules
-frontend
+**/.next
 .git
+.env
+video
+build
 data/state
 data/outbox
 **/__pycache__

@@ -1,0 +1,15 @@
+# One-click deploy: https://render.com/deploy?repo=https://github.com/azizghaus14/campus-time-ops
+services:
+  - type: web
+    name: campus-time-ops
+    runtime: docker
+    plan: free
+    dockerfilePath: ./deploy/render/Dockerfile
+    dockerContext: .
+    healthCheckPath: /login
+    autoDeploy: true
+    envVars:
+      - key: SOLVER_MAX_WORKERS   # free plan = 512 MB; one CP-SAT worker keeps a campus re-plan ~375 MB
+        value: "1"
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=160
