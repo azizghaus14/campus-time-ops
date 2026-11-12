@@ -63,6 +63,6 @@ docs/      ARCHITECTURE, DECISIONS, DEMO_SCRIPT, REPORT_OUTLINE, METRICS, SETUP_
 - **Running on real APSpace data with APU's permission.** Replace the loader with an authenticated APSpace or timetable API, keep the same service and MCP layer, add SSO (IAP or OAuth) in front of the MCP endpoint and the dashboard, and run a data-protection impact assessment with APU (contact: CTI).
 
 ## Status and open items
-- **Agent platform:** the Gemini Enterprise configs are ready, but MCP support in the tenant must be **verified** (D-02). If it isn't supported, the ADK fallback is implemented and discovers the MCP tools.
+- **Agent platform:** per the organisers, the 13 Nov prototype does not need Gemini Enterprise. It ships with the in-app assistant plus the MCP server. For the 17 Nov final (Top 5), the Gemini Enterprise agents connect to the same MCP server through Google OAuth. The configs and instructions are ready in `agents/`, and the ADK + Vertex AI fallback also works (D-02).
 - **Workspace actions:** the real Google Calendar, Gmail and Docs integration is implemented (`WORKSPACE_MODE=google`). It needs a demo Workspace account (see `docs/SETUP_GOOGLE.md`). Local mode writes real `.ics`, `.eml` and markdown files.
 - **Still to do:** interviews (`TBD-interview` in METRICS), verifying the attendance threshold with APU, and the per-stop shuttle times (marked VERIFY).
