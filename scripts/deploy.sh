@@ -14,7 +14,10 @@ SA="campus-time-ops@$PROJECT.iam.gserviceaccount.com"
 
 echo "==> project=$PROJECT region=$REGION tag=$TAG"
 gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com \
-  secretmanager.googleapis.com firestore.googleapis.com --project "$PROJECT" >/dev/null
+  secretmanager.googleapis.com firestore.googleapis.com aiplatform.googleapis.com \
+  calendar-json.googleapis.com gmail.googleapis.com docs.googleapis.com drive.googleapis.com --project "$PROJECT" >/dev/null
+gcloud firestore databases describe --database="(default)" --project "$PROJECT" >/dev/null 2>&1 || \
+  gcloud firestore databases create --location="$REGION" --project "$PROJECT"
 
 gcloud artifacts repositories describe "$REPO" --location "$REGION" --project "$PROJECT" >/dev/null 2>&1 || \
   gcloud artifacts repositories create "$REPO" --repository-format docker --location "$REGION" --project "$PROJECT"
