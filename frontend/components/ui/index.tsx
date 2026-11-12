@@ -1,6 +1,8 @@
 "use client";
 // Small shadcn/ui-style primitives (Tailwind + CSS variables), kept local to avoid a CLI step.
 import { AlertTriangle, Loader2 } from "lucide-react";
+
+import { Orb } from "@/components/orb";
 import * as React from "react";
 
 import { cn } from "@/lib/format";
@@ -94,8 +96,8 @@ export function Stat({ label, value, sub, tone }: { label: string; value: React.
 
 export function Spinner({ label = "Loading…" }: { label?: string }) {
   return (
-    <div className="flex items-center gap-2 muted text-sm p-6">
-      <Loader2 className="h-4 w-4 animate-spin" /> {label}
+    <div className="flex items-center gap-3 muted text-sm p-6">
+      <Orb state="searching" size={32} tint="violet" /> {label}
     </div>
   );
 }

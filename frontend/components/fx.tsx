@@ -1,5 +1,5 @@
 "use client";
-// Visual effects: aurora light rising from underneath + stardust particles drifting up through it.
+// Visual effects: a living aurora rising from underneath + stardust drifting up through it.
 import { useEffect, useRef } from "react";
 
 import { cn } from "@/lib/format";
@@ -7,7 +7,9 @@ import { cn } from "@/lib/format";
 export function Aurora({ className, intensity = 1 }: { className?: string; intensity?: number }) {
   return (
     <div className={cn("aurora", className)} style={{ opacity: intensity }} aria-hidden>
+      <div className="swirl" />
       <div className="blob b2" />
+      <div className="blob b5" />
       <div className="blob b3" />
       <div className="blob b1" />
       <div className="blob b4" />
@@ -15,9 +17,32 @@ export function Aurora({ className, intensity = 1 }: { className?: string; inten
   );
 }
 
-type P = { x: number; y: number; vy: number; vx: number; r: number; life: number; max: number; hue: number; tw: number };
+/** Pre-rendered glow sprite: tiny bright core + gaussian-like halo that fades to exactly zero (no hard rim). */
+function makeSprite(rgb: [number, number, number], px = 64) {
+  const c = document.createElement("canvas");
+  c.width = c.height = px;
+  const g = c.getContext("2d")!;
+  const r = px / 2;
+  const grad = g.createRadialGradient(r, r, 0, r, r, r);
+  const [R, G, B] = rgb;
+  const stops: [number, number][] = [[0, 1], [0.08, 1], [0.16, 0.7], [0.28, 0.3], [0.45, 0.1], [0.7, 0.03], [1, 0]];
+  for (const [o, a] of stops) grad.addColorStop(o, `rgba(${R},${G},${B},${a})`);
+  g.fillStyle = grad;
+  g.fillRect(0, 0, px, px);
+  // white-hot centre
+  const core = g.createRadialGradient(r, r, 0, r, r, px * 0.06);
+  core.addColorStop(0, "rgba(255,255,255,1)");
+  core.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = core;
+  g.fillRect(0, 0, px, px);
+  return c;
+}
 
-/** Canvas stardust: particles spawn near the bottom (inside the glow), rise with a gentle sway, twinkle and fade. */
+const PALETTE: [number, number, number][] = [[214, 204, 255], [176, 160, 255], [150, 190, 255], [255, 184, 236], [240, 240, 255]];
+
+type P = { x: number; y: number; vy: number; vx: number; size: number; life: number; max: number; spr: number; tw: number; tws: number; drift: number };
+
+/** Canvas stardust: small crisp specks born in the glow, rising with a gentle sway, twinkling, fading smoothly. */
 export function Stardust({ className, density = 1 }: { className?: string; density?: number }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
@@ -26,68 +51,63 @@ export function Stardust({ className, density = 1 }: { className?: string; densi
     const ctx = c.getContext("2d");
     if (!ctx) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let w = 0, h = 0, raf = 0;
+    const sprites = PALETTE.map((p) => makeSprite(p));
     const dpr = Math.min(2, window.devicePixelRatio || 1);
+    let w = 0, h = 0, raf = 0, last = performance.now();
     const parts: P[] = [];
     const resize = () => {
       const r = c.getBoundingClientRect();
-      w = r.width; h = r.height;
-      c.width = w * dpr; c.height = h * dpr;
+      w = Math.max(1, r.width); h = Math.max(1, r.height);
+      c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(c);
-    const target = Math.round(90 * density * Math.min(1.6, w / 900 + 0.4));
+    const target = Math.round(210 * density * Math.min(1.8, Math.max(0.5, w / 1100)));
     const spawn = (initial = false): P => {
-      // concentrated around the centre, like light leaking up from below
-      const cx = w / 2 + (Math.random() + Math.random() + Math.random() - 1.5) * w * 0.38;
-      const max = 260 + Math.random() * 420;
+      const spread = (Math.random() + Math.random() + Math.random() - 1.5) / 1.5; // bell-shaped, centred
+      const big = Math.random() < 0.08;
       return {
-        x: cx, y: initial ? h * (0.35 + Math.random() * 0.65) : h + 6, vy: -(0.18 + Math.random() * 0.55), vx: (Math.random() - 0.5) * 0.12,
-        r: Math.random() < 0.85 ? 0.5 + Math.random() * 0.9 : 1.4 + Math.random() * 1.1, life: initial ? Math.random() * max : 0, max,
-        hue: [255, 228, 205, 290][Math.floor(Math.random() * 4)], tw: Math.random() * Math.PI * 2,
+        x: w / 2 + spread * w * 0.48, y: initial ? h * (0.15 + Math.random() * 0.85) : h + 4,
+        vy: -(10 + Math.random() * 34), vx: (Math.random() - 0.5) * 6,
+        size: big ? 12 + Math.random() * 10 : 4.5 + Math.random() * 5.5, // sprite px (core is ~6% of that)
+        life: initial ? Math.random() * 8 : 0, max: 6 + Math.random() * 9,
+        spr: Math.floor(Math.random() * sprites.length), tw: Math.random() * Math.PI * 2, tws: 1.5 + Math.random() * 3.5,
+        drift: Math.random() * Math.PI * 2,
       };
     };
     for (let i = 0; i < target; i++) parts.push(spawn(true));
-    let t = 0;
-    const tick = () => {
-      t += 1;
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
       ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "lighter";
       for (let i = 0; i < parts.length; i++) {
         const p = parts[i];
-        p.life += 1;
-        p.y += p.vy;
-        p.x += p.vx + Math.sin((p.life + p.tw * 50) / 60) * 0.12;
+        p.life += dt;
+        p.y += p.vy * dt;
+        p.x += (p.vx + Math.sin(p.life * 0.9 + p.drift) * 5) * dt;
         const k = p.life / p.max;
-        const fade = k < 0.15 ? k / 0.15 : k > 0.7 ? Math.max(0, (1 - k) / 0.3) : 1;
-        const tw = 0.65 + 0.35 * Math.sin(t / 14 + p.tw);
-        const a = fade * tw * (0.25 + 0.75 * (p.y / h));
-        if (p.life >= p.max || p.y < -10) { parts[i] = spawn(); continue; }
-        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 4);
-        g.addColorStop(0, `hsla(${p.hue}, 100%, 88%, ${a})`);
-        g.addColorStop(0.35, `hsla(${p.hue}, 100%, 75%, ${a * 0.45})`);
-        g.addColorStop(1, `hsla(${p.hue}, 100%, 70%, 0)`);
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r * 4, 0, Math.PI * 2);
-        ctx.fill();
+        if (k >= 1 || p.y < -20) { parts[i] = spawn(); continue; }
+        const fade = Math.sin(Math.PI * Math.min(1, k)) ** 1.2; // smooth in & out
+        const tw = 0.7 + 0.3 * Math.sin(p.life * p.tws + p.tw);
+        const heightFade = 0.45 + 0.55 * Math.min(1, p.y / h + 0.3);
+        ctx.globalAlpha = Math.max(0, Math.min(1, fade * tw * heightFade));
+        const s = p.size;
+        ctx.drawImage(sprites[p.spr], p.x - s / 2, p.y - s / 2, s, s);
       }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = "source-over";
       if (!reduce) raf = requestAnimationFrame(tick);
     };
-    tick();
+    raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); ro.disconnect(); };
   }, [density]);
   return <canvas ref={ref} className={cn("absolute inset-0 h-full w-full pointer-events-none", className)} aria-hidden />;
 }
 
-/** A glass panel with the aurora + stardust glowing up from underneath (used to highlight key moments). */
-export function GlowStage({ children, className, height = "auto" }: { children: React.ReactNode; className?: string; height?: string }) {
-  return (
-    <div className={cn("relative overflow-hidden rounded-[28px]", className)} style={{ height }}>
-      <Aurora intensity={0.7} />
-      <Stardust density={0.6} />
-      <div className="relative">{children}</div>
-    </div>
-  );
+/** The glow pool that sits under the glass composer. */
+export function ComposerGlow({ soft = false }: { soft?: boolean }) {
+  return <div className={cn("composer-glow", soft && "soft")} aria-hidden><i /><i /><i /><i /></div>;
 }

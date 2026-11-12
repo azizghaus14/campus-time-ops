@@ -3,6 +3,7 @@ import { ArrowRight, Building2, GraduationCap, Presentation, Sparkles } from "lu
 import { useState } from "react";
 
 import { Aurora, Stardust } from "@/components/fx";
+import { Orb } from "@/components/orb";
 import { cn } from "@/lib/format";
 import { Role, setSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
@@ -34,7 +35,8 @@ export default function Login() {
       <div className="absolute inset-x-0 bottom-0 h-[70vh]"><Aurora /></div>
       <div className="absolute inset-0"><Stardust density={1.2} /></div>
       <div className="relative w-full max-w-[980px]">
-        <div className="flex justify-center mb-6">
+        <div className="flex flex-col items-center mb-6 gap-5">
+          <Orb state="connecting" size={112} tint="violet" halo />
           <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px] muted backdrop-blur">
             <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" /> APU Cloud Innovation Hackathon 2026
           </div>

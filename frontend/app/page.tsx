@@ -4,14 +4,15 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { CardAction, RenderCard } from "@/components/assistant/cards";
-import { Aurora, Stardust } from "@/components/fx";
+import { Aurora, ComposerGlow, Stardust } from "@/components/fx";
+import { Orb, OrbState, stateFor } from "@/components/orb";
 import { Ring, SegBar } from "@/components/viz";
 import { post } from "@/lib/api";
 import { cn, fmtDate, num } from "@/lib/format";
 import { Session, useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
-type Msg = { id: number; from: "user" | "assistant"; text: string; cards?: any[]; pending?: boolean };
+type Msg = { id: number; from: "user" | "assistant"; text: string; cards?: any[]; pending?: boolean; orb?: OrbState };
 
 function md(text: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((p, i) => (p.startsWith("**") ? <b key={i} className="text-white font-semibold">{p.slice(2, -2)}</b> : <span key={i}>{p}</span>));
@@ -65,12 +66,12 @@ function Assistant({ session }: { session: Session }) {
       setCtx({ proposal_id: p.id });
       return;
     }
-    setMsgs((m) => [...m, { id: uid, from: "user", text: t }, { id: aid, from: "assistant", text: "", pending: true }]);
+    setMsgs((m) => [...m, { id: uid, from: "user", text: t }, { id: aid, from: "assistant", text: "", pending: true, orb: stateFor(t) }]);
     setBusy(true);
     try {
       const r = await post<any>("/assistant", { message: t, context: ctx });
       setCtx(r.context || {});
-      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: r.reply, cards: r.cards } : x)));
+      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: r.reply, cards: r.cards, orb: "breathing" } : x)));
     } catch (e: any) {
       setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: `Something went wrong: ${e.message || e}` } : x)));
     } finally {
@@ -80,9 +81,10 @@ function Assistant({ session }: { session: Session }) {
 
   const composer = (
     <div className="composer-wrap">
-      <div className={cn("composer-glow", active && "soft")} />
+      <ComposerGlow soft={active} />
     <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="liquid w-full">
-      <div className="relative flex items-end gap-2 p-2.5 pl-5">
+      <div className="relative flex items-end gap-2 p-2.5 pl-3.5">
+        <span className="self-center pl-0.5"><Orb state={busy ? "solving" : input ? "listening" : "working"} size={30} tint="violet" /></span>
         <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={active ? 1 : 2}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
           placeholder={PROMPT[session.role]} aria-label="Message the assistant"
@@ -97,13 +99,11 @@ function Assistant({ session }: { session: Session }) {
 
   if (!active) {
     return (
-      <section className="relative -mx-4 md:-mx-8 -mt-7 overflow-hidden min-h-[calc(100vh-56px)] flex flex-col">
+      <section className="relative -mx-4 md:-ml-[260px] md:-mr-8 -mt-[88px] pt-14 md:pl-[260px] overflow-hidden min-h-screen flex flex-col">
         <div className="absolute inset-x-0 bottom-0 h-[72%]"><Aurora /></div>
         <Stardust density={1.3} />
         <div className="relative flex-1 flex flex-col items-center justify-center px-5 pt-14 pb-8">
-          <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[12px] muted backdrop-blur mb-6">
-            <Sparkles className="h-3.5 w-3.5 text-[var(--accent)]" /> Campus Time Ops assistant
-          </div>
+          <div className="mb-5"><Orb state={input ? "listening" : "working"} size={104} tint="violet" halo /></div>
           <h1 className="text-center text-[40px] md:text-[60px] font-semibold tracking-[-0.04em] leading-[1.03]"><span className="text-gradient">{greeting(session, health?.now)}</span></h1>
           <p className="text-center muted mt-3 text-[17px] max-w-xl">
             {session.role === "student" ? "Your timetable, changes and attendance. Just ask." : "Describe what happened in plain words. I'll work out the impact, draft a clash-free plan and wait for your approval."}
@@ -129,10 +129,10 @@ function Assistant({ session }: { session: Session }) {
               <div className="max-w-[80%] rounded-[22px] rounded-br-md bg-white/[0.08] border border-white/[0.06] px-4 py-2.5 text-[15px]">{m.text}</div>
             ) : (
               <div className="flex gap-3">
-                <div className="h-8 w-8 shrink-0 rounded-full btn-gradient grid place-items-center mt-0.5"><Sparkles className="h-4 w-4" /></div>
+                <div className="shrink-0 -mt-0.5"><Orb state={m.pending ? m.orb || "searching" : "working"} size={36} tint={m.pending ? "blue" : "violet"} halo={m.pending} /></div>
                 <div className="min-w-0 flex-1 space-y-3">
                   {m.pending ? (
-                    <div className="text-[14px] muted"><span className="shimmer rounded-full px-3 py-1">Reading the live timetable and running the solver…</span></div>
+                    <div className="text-[14px] pt-2"><span className="shimmer">{m.orb === "solving" ? "Reading the live timetable and running the solver…" : m.orb === "connecting" ? "Applying the approved plan…" : m.orb === "weaving" ? "Finding a time when everyone is free…" : "Looking that up…"}</span></div>
                   ) : (
                     <div className="text-[15px] leading-relaxed text-white/85">{md(m.text)}</div>
                   )}
@@ -144,7 +144,7 @@ function Assistant({ session }: { session: Session }) {
         ))}
         <div ref={endRef} style={{ scrollMarginBottom: 230 }} />
       </div>
-      <div className="fixed bottom-0 left-0 md:left-[232px] right-0 z-30 pointer-events-none">
+      <div className="fixed bottom-0 left-0 right-0 md:pl-[260px] z-30 pointer-events-none">
         <div className="relative h-[200px]">
           <div className="absolute inset-0 overflow-hidden">
             <div className="absolute inset-x-0 -bottom-16 h-[260px] opacity-80"><Aurora /></div>

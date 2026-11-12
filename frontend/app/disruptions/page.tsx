@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
 
 import LecturerPicker from "@/components/pickers";
+import { Orb } from "@/components/orb";
 import ReplanGrid from "@/components/replan-grid";
 import { Badge, Button, Card, CardHeader, Empty, ErrorBox, Input, Label, PageHeader, Select, Spinner } from "@/components/ui";
 import { get, post } from "@/lib/api";
@@ -171,7 +172,7 @@ function Detail({ id, autoplan, onChange }: { id: string; autoplan: boolean; onC
 
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <div className="font-semibold text-sm flex items-center gap-2"><Cpu className="h-4 w-4" /> Live re-plan</div>
+          <div className="font-semibold text-sm flex items-center gap-2"><Orb state={solving ? "solving" : prop ? "breathing" : "working"} size={28} tint={solving ? "blue" : "violet"} /> Live re-plan</div>
           <div className="text-xs muted">
             {solving ? "OR-Tools CP-SAT solving…" : prop ? <>Solved in <b className="text-[var(--text)]">{prop.stats.total_s}s</b> ({prop.stats.status}, {prop.stats.engine}{prop.stats.decomposition ? `, ${prop.stats.decomposition}` : ""}) · {num(prop.stats.variables)} variables · clash check <b className={s.clash_check.passed ? "text-[var(--green)]" : "text-[var(--red)]"}>{s.clash_check.passed ? "PASSED" : "FAILED"}</b></> : "Press Run solver"}
           </div>

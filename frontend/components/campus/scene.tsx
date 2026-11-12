@@ -106,8 +106,8 @@ function Scene(p: Props) {
   }, [p.layout, p.util]);
   return (
     <>
-      <color attach="background" args={["#050507"]} />
-      <fog attach="fog" args={["#050507", 120, 260]} />
+      <color attach="background" args={["#040406"]} />
+      <fog attach="fog" args={["#040406", 130, 280]} />
       <ambientLight intensity={0.35} />
       <directionalLight position={[40, 80, 30]} intensity={0.7} />
       <pointLight position={[-40, 30, -30]} color="#5b6bff" intensity={2200} distance={160} />

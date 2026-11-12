@@ -1,15 +1,15 @@
 "use client";
-import { Pause, Play, Sparkles, X } from "lucide-react";
+import { Pause, Play, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
 import type { Mode, RoomState } from "@/components/campus/scene";
-import { Spinner } from "@/components/ui";
+import { Orb } from "@/components/orb";
 import { cn, fmtDate } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
-const CampusCanvas = dynamic(() => import("@/components/campus/scene"), { ssr: false, loading: () => <Spinner label="Building the campus…" /> });
+const CampusCanvas = dynamic(() => import("@/components/campus/scene"), { ssr: false, loading: () => <div className="h-screen grid place-items-center"><Orb state="shaping" size={72} halo /></div> });
 
 const hm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 
@@ -81,14 +81,14 @@ export default function Campus() {
   const roomInfo = room && day ? day.rooms[room] : null;
   const roomMeta = room && layout ? layout.buildings.flatMap((b: any) => b.floors.flatMap((f: any) => f.rooms.map((r: any) => ({ ...r, building: b.name, level: f.level })))).find((r: any) => r.name === room) : null;
 
-  if (!layout || !session) return <Spinner label="Loading campus…" />;
+  if (!layout || !session) return <div className="h-[70vh] grid place-items-center"><div className="text-center"><Orb state="searching" size={72} halo /><div className="muted text-sm mt-4">Building the campus…</div></div></div>;
   return (
-    <div className="relative -mx-4 md:-mx-8 -my-7 h-[calc(100vh-56px)] overflow-hidden">
+    <div className="relative -mx-4 md:-ml-[260px] md:-mr-8 -mt-[84px] -mb-7 h-screen overflow-hidden">
       <CampusCanvas layout={layout} states={states} util={util} mode={mode} selected={selected} floor={floor} hoverRoom={hover}
         onSelect={(id) => { setSelected(id); setFloor(null); if (!id) setRoom(null); }} onRoom={setRoom} onHover={setHover} pins={pins} />
 
       {/* top-left: mode */}
-      <div className="absolute left-5 top-5 flex flex-col gap-3">
+      <div className="absolute left-5 md:left-[284px] top-[76px] flex flex-col gap-3">
         <div className="glass-strong rounded-full p-1 flex">
           {([["live", "Live"], ["heat", "Heat · day"], ["week", "Heat · week"]] as [Mode, string][]).map(([m, l]) => (
             <button key={m} onClick={() => setMode(m)} className={cn("rounded-full px-4 py-1.5 text-[13px] transition", mode === m ? "bg-white text-black font-medium" : "text-white/70 hover:text-white")}>{l}</button>
@@ -108,9 +108,9 @@ export default function Campus() {
 
       {/* top-right: insights */}
       {insightsOpen && stats && (
-        <div className="absolute right-5 top-5 glass-strong rounded-[22px] w-[300px] p-5 rise">
+        <div className="absolute right-5 top-[76px] glass-strong rounded-[22px] w-[300px] p-5 rise">
           <button onClick={() => setInsightsOpen(false)} className="absolute right-3 top-3 h-7 w-7 grid place-items-center rounded-full hover:bg-white/10"><X className="h-4 w-4 text-white/60" /></button>
-          <div className="h-10 w-10 rounded-2xl btn-gradient grid place-items-center"><Sparkles className="h-5 w-5" /></div>
+          <Orb state="connecting" size={44} tint="violet" halo />
           <div className="font-semibold text-[16px] mt-3 tracking-tight">{3 + (day?.disruptions.filter((d: any) => d.sessions_today > 0).length || 0)} insights for {date && fmtDate(date, { weekday: "long", day: "numeric", month: "short" })}</div>
           <ul className="mt-3 space-y-2.5 text-[13px] text-white/80">
             <li className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-[var(--accent)] shrink-0" />Peak at <b className="text-white">{hm(stats.peak.t)}</b>: {stats.peak.n} rooms in use at once.</li>
@@ -126,7 +126,7 @@ export default function Campus() {
 
       {/* right drawer: building / room */}
       {selB && (
-        <div className="absolute right-5 bottom-28 glass-strong rounded-[22px] w-[320px] max-h-[56vh] overflow-auto p-4 rise" style={{ top: insightsOpen ? 380 : 20 }}>
+        <div className="absolute right-5 bottom-28 glass-strong rounded-[22px] w-[320px] max-h-[56vh] overflow-auto p-4 rise" style={{ top: insightsOpen ? 440 : 76 }}>
           <div className="flex items-center justify-between">
             <div><div className="font-semibold tracking-tight">{selB.name}</div><div className="faint text-[11.5px]">{selB.rooms} rooms · {selB.floors.length} floors · click a room</div></div>
             <button onClick={() => { setSelected(null); setRoom(null); }} className="h-7 w-7 grid place-items-center rounded-full hover:bg-white/10"><X className="h-4 w-4 text-white/60" /></button>
@@ -158,7 +158,7 @@ export default function Campus() {
       )}
 
       {/* bottom: day + time */}
-      <div className="absolute inset-x-0 bottom-5 flex justify-center px-4">
+      <div className="absolute inset-x-0 bottom-5 flex justify-center px-4 md:pl-[264px]">
         <div className="glass-strong rounded-[22px] px-4 py-3 w-full max-w-[860px]">
           <div className="flex items-center gap-1.5 overflow-x-auto pb-2">
             {layout.dates.map((d: string) => (
@@ -184,7 +184,7 @@ export default function Campus() {
           </div>
         </div>
       </div>
-      <div className="absolute left-5 bottom-28 text-[10.5px] faint max-w-[260px]">{layout.note} Drag to orbit · scroll to zoom · click a building to open its floors.</div>
+      <div className="absolute left-5 md:left-[284px] bottom-32 text-[10.5px] faint max-w-[260px]">{layout.note} Drag to orbit · scroll to zoom · click a building to open its floors.</div>
     </div>
   );
 }

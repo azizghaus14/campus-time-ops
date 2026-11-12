@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { Orb } from "@/components/orb";
 import { cn, fmtDateTime } from "@/lib/format";
 import { clearSession, Role, useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
@@ -63,11 +64,11 @@ export default function Shell({ children }: { children: React.ReactNode }) {
   const nav = NAV[session.role];
   const initials = session.name.replace(/^(Dr\.|Ms\.|Mr\.|Prof\.|Assoc\. Prof\.|Ts\.)\s*/, "").split(" ").map((x) => x[0]).join("").slice(0, 2);
   return (
-    <div className="min-h-screen flex">
-      <aside className="hidden md:flex w-[232px] shrink-0 flex-col sticky top-0 h-screen p-3">
-        <div className="panel flex-1 flex flex-col !rounded-[24px] overflow-hidden">
+    <div className="min-h-screen">
+      <aside className="hidden md:flex fixed left-3 top-3 bottom-3 w-[236px] z-40 flex-col">
+        <div className="glass-strong flex-1 flex flex-col !rounded-[26px] overflow-hidden">
           <div className="px-4 pt-5 pb-4 flex items-center gap-2.5">
-            <div className="h-9 w-9 rounded-xl btn-gradient grid place-items-center"><Sparkles className="h-4 w-4 text-white" /></div>
+            <Orb state="weaving" size={36} tint="violet" />
             <div className="leading-tight">
               <div className="font-semibold text-[14px] tracking-tight">Campus Time Ops</div>
               <div className="faint text-[11px]">APU · live timetable</div>
@@ -101,8 +102,8 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </aside>
-      <div className="flex-1 min-w-0">
-        <header className="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 md:px-8 h-14 backdrop-blur-xl bg-[var(--bg)]/60 border-b border-white/[0.04]">
+      <div className="min-w-0 md:pl-[260px]">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 px-4 md:px-8 h-14 bg-gradient-to-b from-[var(--bg)]/90 via-[var(--bg)]/55 to-transparent">
           <div className="flex md:hidden gap-1 overflow-x-auto text-xs">
             {nav.map((n) => <Link key={n.href} href={n.href} className="px-2.5 py-1 rounded-full whitespace-nowrap bg-white/[0.04]">{n.label}</Link>)}
           </div>
@@ -112,7 +113,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="text-[11px] faint hidden md:block">Every change needs a human approval</div>
         </header>
-        <main className="px-4 md:px-8 py-7 max-w-[1480px]">{children}</main>
+        <main className="relative px-4 md:px-8 py-7 max-w-[1520px]">{children}</main>
       </div>
     </div>
   );
