@@ -1,6 +1,5 @@
 // All dashboard calls go through the Next.js proxy (/api/backend/*) which adds the bearer token server-side.
 export const API = "/api/backend";
-export const OUTBOX_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 export class ApiError extends Error {
   code: string;

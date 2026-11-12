@@ -1,0 +1,72 @@
+# Replan agent (HERO) - Gemini Enterprise chat agent with actions, or ADK fallback (agents/adk_app)
+name: campus-replan
+display_name: "Replan - Campus Time Ops"
+description: >
+  Re-plans APU's live timetable when a lecturer is unavailable, a room is closed or a holiday is declared:
+  substitute lecturers first, then clash-free rescheduling with a constraint solver. A human approves every
+  action; the system then creates Calendar events, Gmail drafts and a change-log Doc entry. Also answers
+  "how many more classes can I miss?" from the real remaining timetable.
+instructions_file: instructions.md
+model: gemini-2.5-pro            # use the latest Gemini Pro available in the tenant
+language: en
+time_zone: Asia/Kuala_Lumpur
+
+tools:
+  mcp_server:
+    connector: third_party_mcp   # Gemini Enterprise 3P "MCP server" data connector
+    url: https://<backend-cloud-run-url>/mcp
+    transport: streamable_http
+    auth:
+      type: bearer
+      secret: projects/<GCP_PROJECT>/secrets/MCP_AUTH_TOKEN/versions/latest
+    allowed_tools:
+      # read
+      - search_lecturers
+      - search_intakes
+      - get_lecturer_schedule
+      - get_group_schedule
+      - get_room_schedule
+      - get_sessions_on
+      - find_free_rooms
+      - get_holidays
+      - get_last_shuttle
+      - get_policy
+      # planning (drafts only)
+      - create_disruption
+      - find_substitutes
+      - plan_replan
+      - explain_proposal
+      - get_proposal
+      - list_proposals
+      # actions - require explicit human approval in chat (also enforced server-side: R-HITL)
+      - approve_proposal
+      - execute_proposal
+      - reject_proposal
+      # attendance (read-only)
+      - search_students
+      - attendance_forecast
+      - get_attendance
+    require_user_confirmation: [approve_proposal, execute_proposal]
+
+data_stores:
+  grounding:
+    name: campus-ops-grounding
+    type: unstructured            # Gemini Enterprise / Vertex AI Search data store
+    sources:
+      - grounding/campus_ops_policy.md
+      - grounding/APU_Student_Handbook_Jul2023.pdf
+      - grounding/APU_Holiday_Schedule_2026.html
+      - grounding/APU_Shuttle_Services_2026Oct22.pdf
+    citations: required
+
+native_actions:                  # prefer native Workspace actions when available in the tenant
+  gmail_create_draft: optional   # the MCP execute_proposal already creates drafts; never "send"
+  calendar_create_event: optional
+  docs_append: optional
+
+test_prompts:
+  - "I'm MZD. I'm sick tomorrow, sort out my classes."
+  - "Room B-04-03 is flooded until Friday."
+  - "The government just declared Monday 16 Nov a public holiday."
+  - "Move the Friday afternoon one to the morning instead."
+  - "How many more classes can student STU-DEMO-01 miss?"

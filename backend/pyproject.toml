@@ -1,7 +1,7 @@
 [project]
 name = "campus-time-ops"
 version = "0.1.0"
-description = "AI operations layer on APU's live timetable: replan, slot finder, visa guardian"
+description = "AI operations layer on APU live timetable: replan (substitutes + CP-SAT), slot finder, attendance risk"
 requires-python = ">=3.12"
 dependencies = [
   "fastapi>=0.115",

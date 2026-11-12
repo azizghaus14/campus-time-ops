@@ -1,0 +1,24 @@
+# Demo script: 10-minute video
+
+**Setup:** run `make reset-demo` before recording. It takes under 10 seconds. Open two windows: the dashboard and the Gemini Enterprise chat (or the ADK web UI).
+The demo clock is fixed at **Thu 12 Nov 2026, 09:00 MYT** (`DEMO_NOW`), and the data is the committed snapshot. The demo needs no network access to APU.
+**Demo lecturer:** `MZD` ("Assoc. Prof. Lecturer MZD", pseudonymised). On the committed snapshot, MZD's Friday 13 Nov gives **2 substitutes + 1 reschedule**, which is checked in `tests/test_substitutes.py::test_demo_lecturer_gets_substitutes_and_reschedules`.
+
+| Time | Segment | What to show and say |
+|---|---|---|
+| 0:00–1:00 | **Problem** | Overview page. *"APU's public timetable feed has 25,002 intake-session rows. That's 7,656 physical sessions across 1,143 intakes, 494 lecturers and 235 rooms, and about 600 sessions on a busy weekday."* Interview quote: `TBD-interview` ("When a lecturer calls in sick, we…"). *"APSpace shows timetables. Nothing re-plans them."* |
+| 1:00–2:00 | **Architecture** | The diagram in `docs/ARCHITECTURE.md`. Real data (the pseudonymised public feed), real rules (handbook, holiday page and shuttle PDF quoted in `campus_ops_policy.md`), real engineering (OR-Tools CP-SAT, an MCP server on Cloud Run), and a human approving every step. |
+| 2:00–4:15 | **Replan, small** | In chat: *"I'm MZD. I'm sick tomorrow, sort out my classes."* The agent replies: *"This affects 3 sessions, 12 intake groups and ~513 students."* Proposal: **2 sessions get a substitute.** KCC teaches the same module (Motion Graphics), is free and stays within 3 sessions that day, so the time and room stay the same and no student is affected. **1 session is rescheduled** (Web Design & Development, Fri 13 Nov 14:30 → Mon 16 Nov 10:45, D-07-15), with R-CLASH, R-NOTICE and R-SHUTTLE cited. Edit: *"Move the Web Design one to the afternoon"*. v2 lands on Fri 20 Nov 15:45. Then *"Approve"*. Show the Calendar events, the **Gmail drafts** (KCC is asked to confirm; the groups get a notice) and the Change Log Doc. On the dashboard Proposal page: EXECUTED, with links. |
+| 4:15–6:00 | **Replan, the wow moment** | In chat: *"The government just declared Monday 16 Nov a public holiday."* Dashboard: Overview → "Monday 16 Nov is now a public holiday" → **598 sessions turn red** on the week grid → the solver runs (about 2.5 s, OPTIMAL) → the dots turn **green** across Tue–Fri. The amber dots are online fallbacks. Summary by school (faculty). The zero-clash check is PASSED. *"Evening classes can't stay physical: the last regular shuttle leaves at 19:15, so make-up classes must end by 19:00."* The agent replies with a summary by faculty and day, not 600 rows. |
+| 6:00–7:30 | **Slot Finder** | In chat (or the dashboard preset): *"Schedule 6 FYP vivas of 45 minutes next week with examiners CMM, MSB and RJR in a presentation room."* It returns ranked slots (for example Tue 17 Nov 08:30–13:00 in Presentation Room 1 @ Cyber range), each with a reason. Pick #1, approve, and show the invites plus the Gmail draft. |
+| 7:30–8:30 | **Insights** | **Rooms:** the room × hour heatmap, utilisation per block, and empty rooms right now. **Timetable Health:** days over 6 h, 4+ sessions in a row, lecturer load, and the online vs physical mix. **Attendance Risk:** STU-DEMO-01 (synthetic) is at 88% with 23 sessions left. *"You can miss at most 2 more classes"* in Introduction To Business, calculated per module from real remaining sessions. In chat: *"How many more classes can STU-DEMO-01 miss?"* |
+| 8:30–10:00 | **Impact and scale** | Measured metrics (`docs/METRICS.md`): holiday 598 sessions in about 2.5 s, 94% kept physical, 0 clashes; sick lecturer: 67% handled by a substitute with no student affected. Privacy: a public feed, pseudonymised staff, synthetic students, drafts only, and approval in the audit log. Roadmap: APSpace integration with APU's permission, other universities, and enterprise shift and room planning. |
+
+## Backup plan
+If the agent platform is unavailable during recording, drive the same flows from the dashboard. Its Overview "Try a disruption" buttons make the same MCP-equivalent calls. You can also use `make inspector` to show the raw MCP tools.
+
+## Recording checklist
+- [ ] `make reset-demo`
+- [ ] Workspace mode = google (demo accounts) for the real Calendar and Gmail screens, or local to show the `.ics`, `.eml` and change-log files
+- [ ] Browser at 1440 px or wider, so the dashboard shows two columns
+- [ ] No real staff names on screen. Check that every lecturer appears as `<Title> Lecturer <ID>`

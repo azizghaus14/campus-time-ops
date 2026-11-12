@@ -1,4 +1,4 @@
-"""Proposal lifecycle shared by Replan, Slot Finder and Visa Guardian.
+"""Proposal lifecycle shared by Replan and Slot Finder.
 
 DRAFT --approve--> APPROVED --execute--> EXECUTED
   \\--reject--> REJECTED        DRAFT --(re-plan)--> SUPERSEDED

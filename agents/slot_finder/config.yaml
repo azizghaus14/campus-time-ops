@@ -1,0 +1,40 @@
+name: campus-slot-finder
+display_name: "Slot Finder - Campus Time Ops"
+description: >
+  Finds slots where student groups, 2-3 examiners and a suitable room are all free on APU's live timetable
+  (vivas, presentations, make-up classes, events), then drafts Calendar invites and Gmail drafts after approval.
+instructions_file: instructions.md
+model: gemini-2.5-pro
+time_zone: Asia/Kuala_Lumpur
+
+tools:
+  mcp_server:
+    connector: third_party_mcp
+    url: https://<backend-cloud-run-url>/mcp
+    transport: streamable_http
+    auth:
+      type: bearer
+      secret: projects/<GCP_PROJECT>/secrets/MCP_AUTH_TOKEN/versions/latest
+    allowed_tools:
+      - search_lecturers
+      - search_intakes
+      - get_group_schedule
+      - get_lecturer_schedule
+      - find_free_rooms
+      - get_holidays
+      - find_common_slots
+      - create_slot_proposal
+      - get_proposal
+      - approve_proposal
+      - execute_proposal
+      - reject_proposal
+    require_user_confirmation: [approve_proposal, execute_proposal]
+
+data_stores:
+  grounding:
+    name: campus-ops-grounding
+    citations: required
+
+test_prompts:
+  - "Schedule 6 FYP vivas of 45 minutes next week with examiners CMM, MSB and RJR in a presentation room."
+  - "Find a 2-hour slot next week for a guest talk that intakes AFCF2509BA, AFCF2509ICT and AFCF2609BA can all attend, in an auditorium."

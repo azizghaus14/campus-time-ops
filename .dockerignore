@@ -1,0 +1,11 @@
+.venv
+**/node_modules
+frontend
+.git
+data/state
+data/outbox
+**/__pycache__
+.pytest_cache
+.hypothesis
+grounding/*.pdf
+grounding/*.html
