@@ -13,14 +13,14 @@ from typing import Any, Optional
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from .services import holidays, mrz, proposals, replan, rooms, shuttle, slots, timetable, visa
+from .services import attendance, holidays, proposals, replan, rooms, shuttle, slots, substitutes, timetable
 from .services.errors import ToolError
 from .services.policy import get_policy as _get_policy
 
 INSTRUCTIONS = """Campus Time Ops - AI operations layer on APU's live timetable (pseudonymised public feed).
-Read tools are free to call. Planning tools create DRAFT proposals only. Action tools (execute_proposal, send_drafts)
-refuse anything that is not APPROVED: only call approve_proposal after the human user has explicitly said yes in chat
-(R-HITL). Always state counts (sessions, groups, students) and cite rule ids (R-*) from the proposal citations.
+Read tools are free to call. Planning tools create DRAFT proposals only. The action tool (execute_proposal) refuses
+anything that is not APPROVED: only call approve_proposal after the human user has explicitly said yes in chat (R-HITL).
+The system only creates Gmail DRAFTS; humans send them. Always state counts (sessions, groups, students) and cite rule ids (R-*) from the proposal citations.
 Times are MYT (UTC+8). Lecturers are identified by short ids like 'MDD'; groups by (intake, grouping) e.g. AFCF2509BA/G1."""
 
 mcp = FastMCP(
@@ -114,13 +114,13 @@ def get_room_utilisation(start_date: str, end_date: str, room_type: Optional[str
 
 @tool
 def empty_rooms_now(at: Optional[str] = None) -> dict:
-    """Rooms with no class at a moment (default: now) and an energy-saving estimate (labelled assumptions)."""
+    """Physical rooms with no class at a moment (default: now) and how long each stays free."""
     return rooms.empty_rooms_now(at)
 
 
 @tool
 def timetable_health(start_date: str, end_date: str) -> dict:
-    """Long gaps, 4+ back-to-back sessions, days over 6 hours per intake group, and lecturer load."""
+    """Long gaps, 4+ back-to-back sessions, days over 6 hours per intake group, lecturer load, online vs physical mix by hour."""
     return timetable.timetable_health(start_date, end_date, 25)
 
 
@@ -143,15 +143,25 @@ def create_disruption(type: str, scope: dict[str, Any], window: Optional[dict[st
 
 
 @tool
+def find_substitutes(session_id: str, exclude: Optional[list[str]] = None) -> dict:
+    """Lecturers who genuinely teach the same module (same MODID section, or same module), are free for the whole session
+    and stay within the daily load cap (default 3 sessions/day). Ranked: same section > same module; same school; lowest load."""
+    return substitutes.find_substitutes(session_id, exclude)
+
+
+@tool
 def plan_replan(disruption_id: str, horizon_days: int = 10, allow_online: bool = True, preferred_slots: Optional[list[str]] = None,
                 max_moves_per_group_per_week: Optional[int] = None, allow_saturday: bool = False,
-                pins: Optional[dict[str, dict[str, Any]]] = None, substitute_lecturer: Optional[str] = None) -> dict:
-    """Run the CP-SAT solver and return a DRAFT proposal (moves with rationale + cited rules, unresolved sessions, stats).
-    Edits: pins = {session_id: {"date": "YYYY-MM-DD", "period": "morning|afternoon|evening", "start": "HH:MM", "room": "...", "online": true}}.
-    Re-planning supersedes the previous draft. Nothing is changed until approve + execute."""
+                pins: Optional[dict[str, dict[str, Any]]] = None, use_substitutes: bool = True,
+                decline_substitutes: Optional[list[str]] = None) -> dict:
+    """Return a DRAFT proposal. For LECTURER_UNAVAILABLE each session first gets a substitute lecturer (same time + room, no
+    student affected); the rest are rescheduled by the CP-SAT solver. Every move has type SUBSTITUTE | RESCHEDULE | ONLINE;
+    unresolved sessions are listed with reasons. Edits: pins = {session_id: {"date": "YYYY-MM-DD", "period":
+    "morning|afternoon|evening", "start": "HH:MM", "room": "...", "online": true}} (a pinned session is rescheduled, not
+    substituted); decline_substitutes = [session_id] to reschedule instead. Re-planning supersedes the previous draft."""
     o = {k: v for k, v in dict(horizon_days=horizon_days, allow_online=allow_online, preferred_slots=preferred_slots,
                                max_moves_per_group_per_week=max_moves_per_group_per_week, allow_saturday=allow_saturday,
-                               pins=pins, substitute_lecturer=substitute_lecturer).items() if v is not None}
+                               pins=pins, use_substitutes=use_substitutes, decline_substitutes=decline_substitutes).items() if v is not None}
     p = replan.plan_replan(disruption_id, o)
     return replan.proposal_view(p, move_limit=25)
 
@@ -170,7 +180,7 @@ def get_proposal(proposal_id: str) -> dict:
 
 @tool
 def list_proposals(status: Optional[str] = None, kind: Optional[str] = None) -> list[dict]:
-    """List proposals (compact). status: DRAFT|APPROVED|EXECUTED|REJECTED|SUPERSEDED; kind: REPLAN|SLOT_BOOKING|ESCALATION."""
+    """List proposals (compact). status: DRAFT|APPROVED|EXECUTED|REJECTED|SUPERSEDED; kind: REPLAN|SLOT_BOOKING."""
     return proposals.list_proposals(status, kind)
 
 
@@ -208,23 +218,24 @@ def reject_proposal(proposal_id: str, reason: str) -> dict:
 
 @tool
 def execute_proposal(proposal_id: str) -> dict:
-    """Execute an APPROVED proposal: Calendar events, Gmail DRAFTS (not sent), change-log Doc entry, audit events.
+    """Execute an APPROVED proposal: Calendar events (SUBSTITUTE: lecturer updated; RESCHEDULE/ONLINE: new slot), Gmail
+    DRAFTS (substitute asked to confirm, lecturers and groups notified - never sent), change-log Doc entry, audit events.
     Refuses (NOT_APPROVED) for any other status."""
     p = proposals.execute_proposal(proposal_id, who="agent")
     return {"id": p["id"], "status": p["status"], "execution": p["execution"]}
 
 
+# ------------------------------------------------------------- attendance risk (read-only)
 @tool
-def send_drafts(proposal_id: str, confirm: bool = False) -> dict:
-    """Send the Gmail drafts of an EXECUTED proposal. Needs a SECOND explicit confirmation from the human (confirm=true). Demo accounts only."""
-    return proposals.send_drafts(proposal_id, confirm)
+def search_students(query: str) -> dict:
+    """Find synthetic students by id, name or intake (to answer 'how many more classes can student X miss?')."""
+    return attendance.list_students(None, query, 20)
 
 
-# ------------------------------------------------------------- visa guardian
 @tool
 def get_attendance(student_id: str) -> dict:
-    """Attendance records for one (synthetic) student. Only use for the student's own record or authorised staff."""
-    a = visa.get_attendance(student_id)
+    """Attendance records for one (synthetic) student. Only for the student's own record or authorised staff."""
+    a = attendance.get_attendance(student_id)
     a["records"] = a["records"][-40:]
     return a
 
@@ -232,41 +243,16 @@ def get_attendance(student_id: str) -> dict:
 @tool
 def attendance_forecast(student_id: str) -> dict:
     """Current %, trend, projected % at term end, remaining sessions from the real timetable, max_more_absences
-    (per module, HB §2.2), projected breach date and a ready-to-use message."""
-    f = visa.attendance_forecast(student_id)
+    (per module, HB §2.2) and a ready-to-use message ('you can miss at most N more classes')."""
+    f = attendance.attendance_forecast(student_id)
     f.pop("weekly", None)
     return f
 
 
 @tool
-def visa_risk_sweep(date: Optional[str] = None, limit: int = 30) -> dict:
-    """Ranked at-risk international students with the proposed escalation step (R-ESC-1..4)."""
-    return visa.visa_risk_sweep(date, limit)
-
-
-@tool
-def plan_escalation(student_id: str, step: Optional[str] = None) -> dict:
-    """Draft the next escalation step for a student (nudge -> advisor meeting -> formal letter -> IO review). DRAFT only; IO approves."""
-    return visa.plan_escalation(student_id, step)
-
-
-@tool
-def visa_daily_sweep(max_students: int = 25) -> dict:
-    """The 09:00 MYT workflow: sweep, draft escalations, and draft a digest for the International Office with approval links."""
-    return visa.daily_sweep(max_students)
-
-
-@tool
-def parse_passport_image(image_base64: Optional[str] = None, mrz_text: Optional[str] = None, student_id: Optional[str] = None) -> dict:
-    """Extract the passport MRZ (Gemini multimodal), validate ICAO 9303 check digits, and compare with the student record
-    (expiry before pass expiry, name/number mismatches)."""
-    return mrz.parse_passport_image(image_base64, mrz_text, student_id)
-
-
-@tool
-def list_students(international_only: bool = False, intake: Optional[str] = None, q: Optional[str] = None) -> dict:
-    """List synthetic students (staff use)."""
-    return visa.list_students(international_only, intake, q, 50)
+def attendance_risk_list(date: Optional[str] = None, limit: int = 30) -> dict:
+    """Read-only ranked list of students below or heading towards the attendance threshold. Takes no actions."""
+    return attendance.attendance_risk_list(date, limit)
 
 
 if __name__ == "__main__":

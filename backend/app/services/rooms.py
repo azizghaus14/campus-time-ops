@@ -1,7 +1,6 @@
-"""Room tools: schedule, free-room search, utilisation heatmap, empty-rooms-now + energy estimate."""
+"""Room tools: schedule, free-room search, utilisation heatmap (room x hour, per block), empty rooms right now."""
 from __future__ import annotations
 
-import os
 from collections import defaultdict
 from datetime import timedelta
 from typing import Optional
@@ -11,11 +10,6 @@ from ..data.loader import get_dataset
 from ..domain import hhmm, parse_iso
 from .errors import NotFound, require
 from .timetable import date_range, parse_date, sdict
-
-# Clearly-labelled ASSUMPTIONS for the energy estimate (override via env).
-KWH_PER_EMPTY_AC_ROOM_HOUR = float(os.environ.get("KWH_PER_EMPTY_AC_ROOM_HOUR", "3.5"))
-RM_PER_KWH = float(os.environ.get("RM_PER_KWH", "0.509"))
-
 
 def get_room_schedule(room: str, date_str: str) -> dict:
     ds = get_dataset()
@@ -69,57 +63,38 @@ def get_room_utilisation(start_date: str, end_date: str, room_type: Optional[str
         rows.append({"room": r.name, "type": r.type, "block": r.block, "capacity": r.capacity, "hours": cells,
                      "avg": round(sum(cells) / len(cells), 3)})
     by_hour = [round(sum(r["hours"][i] for r in rows) / max(1, len(rows)), 3) for i in range(len(hours))]
+    blocks: dict[str, list] = defaultdict(list)
+    for r in rows:
+        blocks[r["block"]].append(r["avg"])
+    by_block = sorted(({"block": b, "rooms": len(v), "utilisation": round(sum(v) / len(v), 3)} for b, v in blocks.items()),
+                      key=lambda x: -x["utilisation"])
     return {
         "range": {"start": a.isoformat(), "end": b.isoformat(), "working_days": len(days)},
         "hours": [f"{h:02d}:00" for h in hours],
         "rooms": rows,
         "campus_by_hour": by_hour,
         "campus_avg": round(sum(by_hour) / len(by_hour), 3),
+        "by_block": by_block,
     }
 
 
 def empty_rooms_now(at: Optional[str] = None) -> dict:
-    """Rooms with no class right now, plus an energy-saving estimate if their A/C is off until the next class."""
+    """Physical rooms with no class at a moment (default: now), and how long they stay free."""
     ds = get_dataset()
     now = parse_iso(at) if at else settings.now()
     d, m = now.date(), now.hour * 60 + now.minute
-    empty = []
+    empty, busy = [], 0
     for r in ds.rooms.values():
         if r.online:
             continue
         ivs = ds.room_busy.intervals(r.name, d)
         if any(s <= m < e for s, e, _ in ivs):
+            busy += 1
             continue
         nxt = min((s for s, e, _ in ivs if s > m), default=None)
         free_until = nxt if nxt is not None else DAY_END_MIN
-        empty.append({"room": r.name, "type": r.type, "capacity": r.capacity,
-                      "free_until": hhmm(free_until), "free_hours": round((free_until - max(m, DAY_START_MIN)) / 60, 2)})
+        empty.append({"room": r.name, "type": r.type, "block": r.block, "capacity": r.capacity,
+                      "free_until": hhmm(free_until), "free_hours": round(max(0, free_until - max(m, DAY_START_MIN)) / 60, 2)})
     empty.sort(key=lambda x: (-x["free_hours"], x["room"]))
-    room_hours = sum(max(0, x["free_hours"]) for x in empty if x["type"] != "online")
-    # whole-day idle room-hours across the operating day (08:30-21:00)
-    day_idle = 0.0
-    for r in ds.rooms.values():
-        if r.online:
-            continue
-        busy = ds.room_busy.busy_minutes(r.name, d)
-        day_idle += max(0, (DAY_END_MIN - DAY_START_MIN) - busy) / 60
-    kwh_now = room_hours * KWH_PER_EMPTY_AC_ROOM_HOUR
-    kwh_day = day_idle * KWH_PER_EMPTY_AC_ROOM_HOUR
-    return {
-        "at": now.isoformat(),
-        "empty_count": len(empty),
-        "rooms": empty,
-        "energy": {
-            "assumptions": {
-                "kwh_per_empty_ac_room_hour": KWH_PER_EMPTY_AC_ROOM_HOUR,
-                "rm_per_kwh": RM_PER_KWH,
-                "label": "ASSUMPTION - illustrative only; tune KWH_PER_EMPTY_AC_ROOM_HOUR / RM_PER_KWH",
-            },
-            "remaining_idle_room_hours_today": round(room_hours, 1),
-            "potential_kwh_rest_of_today": round(kwh_now, 0),
-            "potential_rm_rest_of_today": round(kwh_now * RM_PER_KWH, 0),
-            "idle_room_hours_full_day": round(day_idle, 1),
-            "potential_kwh_full_day": round(kwh_day, 0),
-            "potential_rm_full_day": round(kwh_day * RM_PER_KWH, 0),
-        },
-    }
+    return {"at": now.isoformat(), "empty_count": len(empty), "in_use_count": busy,
+            "share_empty": round(len(empty) / max(1, len(empty) + busy), 3), "rooms": empty}

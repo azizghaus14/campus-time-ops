@@ -34,7 +34,7 @@ def run(label, dtype, scope, window=None, execute=False):
     el = time.perf_counter() - t
     row = {"case": label, "type": dtype, "sessions": d["impact"]["sessions"], "intake_groups": d["impact"]["intake_groups"],
            "students": d["impact"]["students"], "solve_s": p["stats"]["total_s"], "end_to_end_s": round(el, 3),
-           "status": p["stats"]["status"], "physical": p["summary"]["placed_physical"], "online": p["summary"]["placed_online"],
+           "status": p["stats"]["status"], "substituted": p["summary"]["substituted"], "rescheduled": p["summary"]["rescheduled"], "physical": p["summary"]["placed_physical"], "online": p["summary"]["placed_online"],
            "unresolved": p["summary"]["unresolved"], "room_only": p["summary"]["room_only_changes"],
            "clash_free": p["summary"]["clash_check"]["passed"]}
     if execute:
@@ -68,6 +68,7 @@ for t in ("LECTURER_UNAVAILABLE", "ROOM_UNAVAILABLE", "HOLIDAY"):
                   "physical_share": round(sum(r["physical"] for r in rs) / max(1, sum(r["sessions"] for r in rs)), 3),
                   "online_share": round(sum(r["online"] for r in rs) / max(1, sum(r["sessions"] for r in rs)), 3),
                   "unresolved_share": round(sum(r["unresolved"] for r in rs) / max(1, sum(r["sessions"] for r in rs)), 3),
+                  "substituted": sum(r["substituted"] for r in rs), "rescheduled": sum(r["rescheduled"] for r in rs),
                   "all_clash_free": all(r["clash_free"] for r in rs)}
 out = {"measured_at": time.strftime("%Y-%m-%d %H:%M"), "snapshot": ds.meta.get("snapshot_file"), "cases": results, "summary": summary}
 (ROOT / "docs" / "metrics.json").write_text(json.dumps(out, indent=1))

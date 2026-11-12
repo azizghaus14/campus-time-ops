@@ -1,7 +1,7 @@
 """M4: no action tool works without an approved proposal (R-HITL); lifecycle produces real artefacts."""
 import pytest
 
-from app.services import proposals, replan, slots, visa
+from app.services import proposals, replan, slots
 from app.services.errors import Conflict, Forbidden, ToolError
 from app.services.workspace import Draft, LocalWorkspace
 
@@ -41,16 +41,14 @@ def test_approve_requires_approver_and_draft():
         proposals.approve_proposal(p["id"], "PL")
 
 
-def test_send_requires_execution_and_second_confirmation(fresh_dataset):
-    p = _draft()
-    with pytest.raises(Forbidden):
-        proposals.send_drafts(p["id"], confirm=True)
-    proposals.approve_proposal(p["id"], "PL")
-    proposals.execute_proposal(p["id"])
-    with pytest.raises(Forbidden) as e:
-        proposals.send_drafts(p["id"])
-    assert e.value.code == "CONFIRMATION_REQUIRED"
-    assert proposals.send_drafts(p["id"], confirm=True)["sent"] >= 1
+def test_no_send_capability_exists():
+    """R7: the system only creates Gmail drafts; there is no send path anywhere."""
+    import app.mcp_server as m
+    from app.services import workspace
+
+    assert not hasattr(proposals, "send_drafts")
+    assert not any(hasattr(c, "send_drafts") for c in (workspace.LocalWorkspace, workspace.GoogleWorkspace))
+    assert "send_drafts" not in {t.name for t in m.mcp._tool_manager.list_tools()}
 
 
 def test_full_lifecycle_creates_artefacts_and_updates_timetable(fresh_dataset, isolated_state):
@@ -82,15 +80,13 @@ def test_edit_that_creates_clash_is_refused():
     assert e.value.code == "EDIT_CREATES_CLASH"
 
 
-def test_slot_booking_and_escalation_need_approval():
+def test_slot_booking_needs_approval(fresh_dataset):
     sp = slots.create_slot_proposal("Guest talk", {"start": "2026-11-18T08:30:00+08:00", "end": "2026-11-18T09:15:00+08:00", "room": "ONLINE"}, [], ["SPG"], "ONLINE")
     with pytest.raises(Forbidden):
         proposals.execute_proposal(sp["id"])
-    ep = visa.plan_escalation("STU-DEMO-01")
-    with pytest.raises(Forbidden):
-        proposals.execute_proposal(ep["id"])
-    proposals.approve_proposal(ep["id"], "International Office")
-    assert proposals.execute_proposal(ep["id"])["status"] == "EXECUTED"
+    proposals.approve_proposal(sp["id"], "Programme Leader")
+    done = proposals.execute_proposal(sp["id"])
+    assert done["status"] == "EXECUTED" and done["execution"]["actions"]["calendar_events"] == 1
 
 
 def test_workspace_refuses_non_demo_recipients(tmp_path):

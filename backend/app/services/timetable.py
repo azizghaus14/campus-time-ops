@@ -207,6 +207,12 @@ def timetable_health(start_date: str, end_date: str, max_items: int = 50) -> dic
     by_dow = Counter()
     for x in long_days:
         by_dow[date.fromisoformat(x["date"]).strftime("%a")] += 1
+    mix: dict[int, Counter] = defaultdict(Counter)
+    for s in ds.sessions.values():
+        if a <= s.date <= b:
+            mix[s.start_min // 60]["online" if ds.rooms[s.room].online else "physical"] += 1
+    delivery_mix = [{"hour": f"{h:02d}:00", "physical": mix[h]["physical"], "online": mix[h]["online"],
+                     "online_share": round(mix[h]["online"] / max(1, sum(mix[h].values())), 3)} for h in sorted(mix)]
     return {
         "range": {"start": a.isoformat(), "end": b.isoformat()},
         "summary": {
@@ -217,6 +223,7 @@ def timetable_health(start_date: str, end_date: str, max_items: int = 50) -> dic
             "lecturers": len(lect_load),
         },
         "long_days_by_weekday": dict(by_dow),
+        "delivery_mix_by_hour": delivery_mix,
         "lecturer_load_histogram_hours_per_week": [{"bucket": f"{k}-{k + 2}h", "lecturers": v} for k, v in sorted(hist.items())],
         "long_gaps": long_gaps[:max_items],
         "back_to_back": b2b[:max_items],

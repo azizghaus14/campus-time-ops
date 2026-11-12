@@ -29,8 +29,6 @@ def rules() -> dict[str, dict]:
         src = re.search(r"\((HB|HOL|SHUTTLE)[^)]*\)", r["text"])
         if src:
             r["source"] = src.group(0).strip("()")
-    for i in range(1, 5):
-        out.setdefault(f"R-ESC-{i}", {"id": f"R-ESC-{i}", "title": f"Escalation step {i}", "label": "ASSUMPTION", "text": "", "source": "campus_ops_policy.md §6"})
     return out
 
 

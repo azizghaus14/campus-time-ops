@@ -1,10 +1,10 @@
 """Proposal lifecycle shared by Replan, Slot Finder and Visa Guardian.
 
-DRAFT --approve--> APPROVED --execute--> EXECUTED  (--send_drafts(confirm=True)--> drafts sent, demo only)
+DRAFT --approve--> APPROVED --execute--> EXECUTED
   \\--reject--> REJECTED        DRAFT --(re-plan)--> SUPERSEDED
 
-R-HITL: every side effect (calendar, email draft, doc, warning) lives in execute_*/send_drafts and refuses anything
-that is not APPROVED. This is the only module that calls the workspace provider.
+R-HITL: every side effect (calendar event, Gmail draft, change-log entry) lives in execute_* and refuses anything that is
+not APPROVED. The system only ever creates Gmail DRAFTS; a human sends them from Gmail.
 """
 from __future__ import annotations
 
@@ -38,7 +38,7 @@ def list_proposals(status: Optional[str] = None, kind: Optional[str] = None, com
     items.sort(key=lambda p: p["id"], reverse=True)
     if compact:
         keep = ("id", "kind", "title", "status", "version", "created_at", "created_by", "disruption_id", "disruption_type",
-                "summary", "stats", "approved_by", "approved_at", "executed_at", "student_id", "step", "bulk")
+                "summary", "stats", "approved_by", "approved_at", "executed_at", "bulk")
         out = []
         for p in items:
             c = {k: p[k] for k in keep if k in p}
@@ -136,10 +136,6 @@ def execute_proposal(proposal_id: str, who: str = "system") -> dict:
         from .slots import execute_slot_booking
 
         result = execute_slot_booking(p, who)
-    elif kind == ProposalKind.ESCALATION.value:
-        from .visa import execute_escalation
-
-        result = execute_escalation(p, who)
     else:
         raise ToolError("BAD_KIND", f"unknown proposal kind {kind}")
     p = get_proposal(proposal_id)
@@ -165,12 +161,16 @@ def _execute_replan(p: dict, who: str) -> dict:
     events = []
     for m in moves:
         att = [addr_lecturer(m.get("substitute") or m["lecturer_id"])] + [addr_intake(g["intake"], g["grouping"]) for g in m["affected_groups"]]
+        if m["type"] == "SUBSTITUTE":
+            summary = f"[SUBSTITUTE] {m['module_name']} - taught by {m['substitute']} (was {m['lecturer_id']})"
+            what = f"Same time and room ({m['from']['label']} {m['from']['room']}); lecturer changed to {m['substitute_name']} ({m['substitute']})."
+        else:
+            summary = f"[{'ONLINE' if m['type'] == 'ONLINE' else 'RESCHEDULED'}] {m['module_name']} ({m['lecturer_id']})"
+            what = f"Moved from {m['from']['label']} {m['from']['room']} to {m['to']['label']} {m['to']['room']}."
         events.append(CalendarEvent(
-            summary=f"[RESCHEDULED] {m['module_name']} ({m['lecturer_id']})",
-            start=m["to"]["start"], end=m["to"]["end"],
+            summary=summary, start=m["to"]["start"], end=m["to"]["end"],
             location=("Online (link to follow)" if m["to"]["room"] == "ONLINE" else m["to"]["room"]),
-            description=(f"Moved from {m['from']['label']} {m['from']['room']} to {m['to']['label']} {m['to']['room']}.\n"
-                         f"Reason: {p['title']}.\nWhy this slot: {m['rationale']}\nRules: {', '.join(m['rule_ids'])}\n"
+            description=(f"{what}\nReason: {p['title']}.\nWhy: {m['rationale']}\nRules: {', '.join(m['rule_ids'])}\n"
                          f"Approved by {p.get('approved_by')} - proposal {ref}."),
             attendees=att, uid=new_uid(m["session_id"]),
         ))
@@ -181,13 +181,15 @@ def _execute_replan(p: dict, who: str) -> dict:
 
     md = [f"**Proposal:** {ref} v{p['version']} - **approved by** {p.get('approved_by')} at {p.get('approved_at')}  ",
           f"**Disruption:** {p.get('disruption_id')} ({p.get('disruption_type')})  ",
-          f"**Result:** {len(moves)} moved ({p['summary'].get('placed_online', 0)} online), {len(p['unresolved'])} unresolved. Clash check passed.", "",
-          "| Module | Lecturer | From | To | Groups | Rules |", "|---|---|---|---|---|---|"]
+          f"**Result:** {p['summary'].get('substituted', 0)} substitute(s), {p['summary'].get('rescheduled', 0)} rescheduled, "
+          f"{p['summary'].get('placed_online', 0)} online, {len(p['unresolved'])} unresolved. Clash check passed.", "",
+          "| Type | Module | Lecturer | From | To | Groups | Rules |", "|---|---|---|---|---|---|---|"]
     for m in moves[:400]:
-        md.append(f"| {m['module_name']} | {m['lecturer_id']} | {m['from']['label']} {m['from']['room']} | {m['to']['label']} {m['to']['room']} | "
+        to = f"same slot, {m['substitute']} teaches" if m["type"] == "SUBSTITUTE" else f"{m['to']['label']} {m['to']['room']}"
+        md.append(f"| {m['type']} | {m['module_name']} | {m['lecturer_id']} | {m['from']['label']} {m['from']['room']} | {to} | "
                   f"{len(m['affected_groups'])} | {', '.join(m['rule_ids'][:4])} |")
     if len(moves) > 400:
-        md.append(f"| ... {len(moves) - 400} more (see dashboard) | | | | | |")
+        md.append(f"| | ... {len(moves) - 400} more (see dashboard) | | | | | |")
     for u in p["unresolved"]:
         md.append(f"\n- UNRESOLVED: {u['session'].get('module_name')} {u['session'].get('date')} - {u['reason']}")
     log = ws.append_changelog(ref, f"{settings.now().strftime('%d %b %Y %H:%M')} - {p['title']}", "\n".join(md))
@@ -218,23 +220,38 @@ def _replan_drafts(p: dict) -> list[Draft]:
     moves = p["moves"]
     by_lect: dict[str, list] = defaultdict(list)
     by_intake: dict[str, list] = defaultdict(list)
+    subs: dict[str, list] = defaultdict(list)
     for m in moves:
-        by_lect[m.get("substitute") or m["lecturer_id"]].append(m)
+        if m["type"] == "SUBSTITUTE":
+            subs[m["substitute"]].append(m)
+        else:
+            by_lect[m["lecturer_id"]].append(m)
         for g in m["affected_groups"]:
             by_intake[g["intake"]].append((g["grouping"], m))
     drafts = []
     footer = ("\n\nThis change was planned by Campus Time Ops and approved by a member of staff. "
               "If the new time does not work for you, reply to this email and the timetabling office will help.\n")
+    for lid, ms in sorted(subs.items()):
+        lines = [f"- {m['module_name']} ({', '.join(m['module_ids'][:2])}): {m['from']['label']} in {m['from']['room']}, "
+                 f"{len(m['affected_groups'])} group(s), ~{m['students']} students" for m in ms]
+        drafts.append(Draft(to=[addr_lecturer(lid)], bcc=[], subject=f"Please confirm: cover {len(ms)} session(s) for {ms[0]['lecturer_id']}",
+                            body=(f"Dear colleague,\n\n{ms[0]['lecturer_name']} is unavailable. You teach the same module, are free at these "
+                                  f"times and stay within the daily load limit, so we would like to ask you to cover:\n\n" + "\n".join(lines)
+                                  + "\n\nPlease reply YES to confirm or NO if you cannot cover; the timetabling office will then reschedule." + footer)))
     for lid, ms in sorted(by_lect.items()):
         lines = [f"- {m['module_name']}: {m['from']['label']} {m['from']['room']}  ->  {m['to']['label']} {m['to']['room']}" for m in ms]
         drafts.append(Draft(to=[addr_lecturer(lid)], bcc=[], subject=f"Timetable change: {len(ms)} session(s) - {p['title']}",
                             body=f"Dear colleague,\n\nYour sessions have been re-planned ({p['title']}):\n\n" + "\n".join(lines) + footer))
     if len(by_intake) <= 60:
         for intake, gm in sorted(by_intake.items()):
-            lines = sorted({f"- {m['module_name']} ({g}): {m['from']['label']}  ->  {m['to']['label']} in {m['to']['room']}" for g, m in gm})
-            drafts.append(Draft(to=[addr_intake(intake)], bcc=[], subject=f"[{intake}] Class rescheduled - {p['title']}",
-                                body=f"Dear students of {intake},\n\nThe following class(es) have a new time or room:\n\n" + "\n".join(lines)
-                                     + "\n\nThe change is already in your calendar." + footer))
+            lines = sorted({(f"- {m['module_name']} ({g}): {m['from']['label']} in {m['from']['room']} goes ahead as planned, "
+                             f"taught by {m['substitute_name']}") if m["type"] == "SUBSTITUTE" else
+                            f"- {m['module_name']} ({g}): {m['from']['label']}  ->  {m['to']['label']} in {m['to']['room']}" for g, m in gm})
+            only_sub = all(m["type"] == "SUBSTITUTE" for _, m in gm)
+            drafts.append(Draft(to=[addr_intake(intake)], bcc=[],
+                                subject=f"[{intake}] {'Lecturer change' if only_sub else 'Class rescheduled'} - {p['title']}",
+                                body=f"Dear students of {intake},\n\nPlease note the following change(s):\n\n" + "\n".join(lines)
+                                     + "\n\nYour calendar has been updated." + footer))
     else:
         by_school: dict[str, set] = defaultdict(set)
         for m in moves:
@@ -249,18 +266,3 @@ def _replan_drafts(p: dict) -> list[Draft]:
                                     body=(f"Dear students,\n\n{p['title']}. All affected classes for your intake have been moved. "
                                           "Your personal calendar has been updated with the new times and rooms; please check APSpace / your calendar." + footer)))
     return drafts
-
-
-def send_drafts(proposal_id: str, confirm: bool = False, who: str = "approver") -> dict:
-    p = get_proposal(proposal_id)
-    if p["status"] != ProposalStatus.EXECUTED.value:
-        raise Forbidden("NOT_EXECUTED", "Drafts can only be sent for an EXECUTED proposal")
-    if confirm is not True:
-        raise Forbidden("CONFIRMATION_REQUIRED", "Sending emails needs a second explicit confirmation: call again with confirm=true")
-    ex = p.get("execution", {})
-    ids = ex.get("draft_ids") or [d["id"] for d in ex.get("drafts", {}).get("drafts", [])]
-    res = get_workspace().send_drafts(p["id"], ids)
-    p.setdefault("execution", {})["sent"] = res
-    get_store().put("proposals", proposal_id, p)
-    log_event(who, "gmail.drafts_sent", proposal_id, after=res)
-    return res

@@ -26,7 +26,6 @@ class ProposalStatus(str, Enum):
 class ProposalKind(str, Enum):
     REPLAN = "REPLAN"
     SLOT_BOOKING = "SLOT_BOOKING"
-    ESCALATION = "ESCALATION"
 
 
 @dataclass
@@ -165,27 +164,14 @@ class AuditEvent:
 
 @dataclass
 class Student:
+    """Synthetic only. attendance_records = {"absent": [occurrence keys]}; every other past session of the group's
+    timetable counts as present."""
+
     id: str
     name: str
     intake: str
     grouping: str
-    nationality: str
-    is_international: bool
-    pass_expiry: Optional[str]
-    passport_no: Optional[str]
-    passport_expiry: Optional[str]
-    dob: Optional[str]
-    sex: Optional[str]
-    advisor_id: Optional[str]
-    profile: str
-    attendance_records: list[dict] = field(default_factory=list)
-
-    def to_dict(self, with_records: bool = False) -> dict:
-        d = asdict(self)
-        if not with_records:
-            d.pop("attendance_records")
-        return d
-
+    attendance_records: dict = field(default_factory=lambda: {"absent": []})
 
 def hhmm(m: int) -> str:
     return f"{m // 60:02d}:{m % 60:02d}"

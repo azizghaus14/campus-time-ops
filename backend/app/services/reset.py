@@ -1,4 +1,4 @@
-"""Restore a clean demo state (< 10 s): clear proposals/disruptions/audit/escalations, wipe the outbox, reload data."""
+"""Restore a clean demo state (< 10 s): clear proposals/disruptions/audit, wipe the outbox, reload data."""
 from __future__ import annotations
 
 import shutil
@@ -21,8 +21,8 @@ def reset_demo() -> dict:
             else:
                 p.unlink(missing_ok=True)
     reset_dataset()
-    from . import visa
+    from . import attendance
 
-    visa.reload_students()
+    attendance.reload_students()
     ds = get_dataset()
     return {"ok": True, "sessions": len(ds.sessions), "elapsed_s": round(time.perf_counter() - t0, 2)}

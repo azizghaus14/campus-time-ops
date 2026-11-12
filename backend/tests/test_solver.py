@@ -38,8 +38,8 @@ def _validate(p: dict):
             # shuttle rule
             latest = latest_end_for_physical(d)
             assert latest is not None and to_end.hour * 60 + to_end.minute <= latest
-        # notice period unless pure room swap
-        if m["change"] != "room-only":
+        # notice period unless the time is unchanged (room swap / substitute lecturer)
+        if m["change"] not in ("room-only", "lecturer-only"):
             assert to_start >= datetime(2026, 11, 13, 9, 0, tzinfo=MYT)
 
 

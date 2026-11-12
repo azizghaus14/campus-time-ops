@@ -44,7 +44,7 @@ app = FastAPI(title="Campus Time Ops", version="0.1.0", lifespan=lifespan,
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 _hits: dict[str, deque] = defaultdict(deque)
-_OPEN_PATHS = ("/api/health", "/docs", "/openapi.json", "/outbox", "/demo-passports")
+_OPEN_PATHS = ("/api/health", "/docs", "/openapi.json", "/outbox")
 
 
 @app.middleware("http")
@@ -97,7 +97,5 @@ def reset_demo():
 
 settings.outbox_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/outbox", StaticFiles(directory=str(settings.outbox_dir)), name="outbox")
-if (settings.data_dir / "demo_passports").exists():
-    app.mount("/demo-passports", StaticFiles(directory=str(settings.data_dir / "demo_passports")), name="passports")
 # MCP streamable HTTP at /mcp (mounted last so /api routes match first)
 app.mount("/", mcp.streamable_http_app())

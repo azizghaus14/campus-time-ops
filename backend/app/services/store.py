@@ -1,4 +1,4 @@
-"""State repository: disruptions, proposals, audit events, escalations, runtime holidays.
+"""State repository: disruptions, proposals, audit events, runtime holidays.
 
 Same interface, two backends:
   - JsonStore (default, local dev / offline demo): one JSON file per collection under data/state/
@@ -13,7 +13,7 @@ from typing import Any, Optional, Protocol
 
 from ..config import settings
 
-COLLECTIONS = ("disruptions", "proposals", "audit", "escalations", "runtime_holidays", "counters")
+COLLECTIONS = ("disruptions", "proposals", "audit", "runtime_holidays", "counters")
 
 
 class Store(Protocol):

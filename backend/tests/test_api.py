@@ -40,6 +40,12 @@ def test_structured_validation_errors(client):
     assert r.status_code == 400 and r.json()["error"]["code"] == "BAD_TYPE"
 
 
+def test_attendance_endpoints(client):
+    r = client.get("/api/attendance/students/STU-DEMO-01").json()
+    assert r["forecast"]["max_more_absences"] == 2
+    assert client.get("/api/attendance/risk", params={"limit": 5}).json()["students"]
+
+
 def test_execute_without_approval_is_403(client):
     d = client.post("/api/disruptions", json={"type": "LECTURER_UNAVAILABLE", "scope": {"lecturer_id": "SPG"}, "window": {"start": "2026-11-13", "end": "2026-11-13"}}).json()
     p = client.post(f"/api/disruptions/{d['id']}/plan", json={"options": {}}).json()
@@ -53,7 +59,7 @@ def test_mcp_requires_token_and_lists_tools(client):
     r = client.post("/mcp", json=body, headers={**H, "Authorization": "Bearer t0k"})
     names = {t["name"] for t in r.json()["result"]["tools"]}
     for required in ["get_lecturer_schedule", "create_disruption", "plan_replan", "approve_proposal", "execute_proposal",
-                     "find_common_slots", "attendance_forecast", "visa_risk_sweep", "parse_passport_image", "plan_escalation"]:
+                     "find_common_slots", "find_substitutes", "attendance_forecast", "attendance_risk_list"]:
         assert required in names
 
 

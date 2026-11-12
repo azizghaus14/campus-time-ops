@@ -9,7 +9,9 @@ from ..config import MYT, settings
 from ..data.loader import Dataset, get_dataset
 from ..domain import Disruption, DisruptionType, ProposalKind, ProposalStatus, hhmm, iso, parse_iso
 from ..solver.decompose import solve_with_decomposition
-from ..solver.model import Cand, SolveRequest, check_no_clashes, fmt_slot
+from ..data.indexes import BusyIndex
+from ..solver.model import Cand, SolveRequest, SolveResult, check_no_clashes, fmt_slot
+from .substitutes import find_substitutes
 from .audit import log_event
 from .errors import Conflict, NotFound, ToolError, require
 from .holidays import holiday_on, working_days
@@ -204,24 +206,33 @@ def plan_replan(disruption_id: str, options: Optional[dict] = None, created_by: 
         if isinstance(p.get("start"), str):
             p["start"] = _start_of(p["start"])
         pins[sid] = p
-    substitutes = {}
-    if o.get("substitute_lecturer"):
-        sub = str(o["substitute_lecturer"]).upper()
-        require(sub in ds.by_lecturer, "UNKNOWN_LECTURER", f"No substitute lecturer '{sub}'")
-        substitutes["*"] = sub
+    # A1: for a sick/unavailable lecturer, first try a substitute (same time + room -> no student affected)
+    swaps: dict[str, dict] = {}
+    pins = {k: v for k, v in pins.items() if k in {s.id for s in sessions}}
+    declined = set(o.get("decline_substitutes") or [])
+    if dtype == DisruptionType.LECTURER_UNAVAILABLE and o.get("use_substitutes", True):
+        overlay = BusyIndex()
+        for s in sessions:
+            if s.id in declined or s.id in pins:
+                continue
+            found = find_substitutes(s.id, exclude=[dis["scope"]["lecturer_id"]], overlay=overlay)
+            if found["candidates"]:
+                best = found["candidates"][0]
+                swaps[s.id] = best | {"alternatives": found["candidates"][1:3]}
+                overlay.add(best["lecturer_id"], s.date, s.start_min, s.end_min, s.id)
+    to_solve = [s for s in sessions if s.id not in swaps]
 
     bulk = len(sessions) > BULK_THRESHOLD
     seed = int(o.get("seed", 42))
     req = SolveRequest(
-        sessions=sessions,
+        sessions=to_solve,
         days=days,
         earliest=now + timedelta(hours=settings.notice_hours),
         blocked_lecturers=blocked_l,
         blocked_rooms=blocked_r,
         allow_online=bool(o.get("allow_online", True)),
-        allow_same_slot=dtype == DisruptionType.ROOM_UNAVAILABLE or bool(substitutes),
+        allow_same_slot=dtype == DisruptionType.ROOM_UNAVAILABLE,
         pins=pins,
-        substitutes=substitutes,
         preferred_starts=preferred,
         max_moves_per_group_per_week=o.get("max_moves_per_group_per_week"),
         time_limit=float(o.get("time_limit", 10.0 if bulk else 3.0)),
@@ -231,21 +242,29 @@ def plan_replan(disruption_id: str, options: Optional[dict] = None, created_by: 
         online_time_cands=2 if bulk else 4,
         workers=8 if bulk else 1,
     )
-    res = solve_with_decomposition(req, ds, force_split=bool(o.get("force_decomposition")))
-    clashes = check_no_clashes(ds, res.assignments, substitutes)
+    if to_solve:
+        res = solve_with_decomposition(req, ds, force_split=bool(o.get("force_decomposition")))
+    else:
+        res = SolveResult({}, {}, {"engine": "substitutes-only", "status": "OPTIMAL", "objective": 0, "sessions": 0, "total_s": 0.0}, {})
+    swap_cands = {sid: Cand(sid, ds.sessions[sid].date, ds.sessions[sid].start_min, ds.sessions[sid].end_min, ds.sessions[sid].room, False, 0, [])
+                  for sid in swaps}
+    clashes = check_no_clashes(ds, {**res.assignments, **swap_cands}, {sid: v["lecturer_id"] for sid, v in swaps.items()})
 
-    moves = [_move_dict(ds, ds.sessions[sid], c, res.eliminations.get(sid, {}), dtype, substitutes) for sid, c in res.assignments.items()]
+    moves = [_move_dict(ds, ds.sessions[sid], c, res.eliminations.get(sid, {}), dtype) for sid, c in res.assignments.items()]
+    moves += [_substitute_move(ds, ds.sessions[sid], v) for sid, v in swaps.items()]
     moves.sort(key=lambda m: (m["from"]["start"], m["session_id"]))
     unresolved = []
     for sid, info in res.unresolved.items():
-        s = ds.sessions[sid]
-        unresolved.append({"session": sdict(ds, s), **info, "rule_ids": ["R-UNRESOLVED"]})
+        unresolved.append({"type": "UNRESOLVED", "session": sdict(ds, ds.sessions[sid]), **info, "rule_ids": ["R-UNRESOLVED"]})
 
     n = len(sessions)
-    n_online = sum(1 for m in moves if m["to"]["online"])
+    n_online = sum(1 for m in moves if m["type"] == "ONLINE")
+    n_sub = sum(1 for m in moves if m["type"] == "SUBSTITUTE")
     n_room_only = sum(1 for m in moves if m["change"] == "room-only")
     summary = {
         "sessions": n,
+        "substituted": n_sub,
+        "rescheduled": sum(1 for m in moves if m["type"] == "RESCHEDULE"),
         "placed_physical": len(moves) - n_online,
         "placed_online": n_online,
         "unresolved": len(unresolved),
@@ -291,7 +310,7 @@ def plan_replan(disruption_id: str, options: Optional[dict] = None, created_by: 
         "stats": res.stats,
         "summary": summary,
         "citations": cite(rule_ids),
-        "substitutes": substitutes,
+        "substitutes": {sid: v["lecturer_id"] for sid, v in swaps.items()},
         "bulk": bulk,
     }
     if clashes:
@@ -327,12 +346,31 @@ def _group_summary(moves: list[dict], unresolved: list[dict], key: str) -> list[
     return rows
 
 
-def _move_dict(ds: Dataset, s, c: Cand, elim: dict, dtype: DisruptionType, substitutes: dict) -> dict:
+def _substitute_move(ds: Dataset, s, sub: dict) -> dict:
+    slot = {"date": s.date.isoformat(), "start": s.start_iso(), "end": s.end_iso(), "room": s.room, "online": ds.rooms[s.room].online,
+            "label": fmt_slot(s.date, s.start_min, s.end_min)}
+    alts = ", ".join(a["lecturer_id"] for a in sub.get("alternatives", []))
+    return {
+        "type": "SUBSTITUTE",
+        "session_id": s.id, "module_name": s.module_name, "module_ids": s.module_ids,
+        "lecturer_id": s.lecturer_id, "lecturer_name": s.lecturer_name,
+        "substitute": sub["lecturer_id"], "substitute_name": sub["lecturer_name"], "substitute_match": sub["match"],
+        "school": s.school, "students": ds.session_students(s),
+        "from": dict(slot), "to": dict(slot), "change": "lecturer-only",
+        "affected_groups": [{"intake": i, "grouping": g} for i, g in s.groups],
+        "rationale": (f"Substitute {sub['lecturer_id']} {sub['reason']}. Same time and room, so no student is affected."
+                      + (f" Alternatives: {alts}." if alts else "")),
+        "rule_ids": ["R-SUB-MODULE", "R-SUB-FREE", "R-SUB-LOAD", "R-CLASH-LECT"],
+        "cost": 0,
+    }
+
+
+def _move_dict(ds: Dataset, s, c: Cand, elim: dict, dtype: DisruptionType) -> dict:
     room = ds.rooms.get(c.room)
     same_time = c.day == s.date and c.start == s.start_min
     rule_ids = ["R-CLASH-GROUP", "R-CLASH-LECT", "R-DURATION"]
     parts = []
-    lect = substitutes.get(s.id) or substitutes.get("*") or s.lecturer_id
+    lect = s.lecturer_id
     headcount = ds.session_students(s)
     if same_time:
         parts.append(f"Same time, room change only (no notice needed, R-NOTICE exception)")
@@ -372,12 +410,13 @@ def _move_dict(ds: Dataset, s, c: Cand, elim: dict, dtype: DisruptionType, subst
     if dtype == DisruptionType.LECTURER_UNAVAILABLE:
         rule_ids.append("R-CLASH-LECT")
     return {
+        "type": "ONLINE" if (c.room == "ONLINE" and not ds.rooms[s.room].online) else "RESCHEDULE",
         "session_id": s.id,
         "module_name": s.module_name,
         "module_ids": s.module_ids,
         "lecturer_id": s.lecturer_id,
         "lecturer_name": s.lecturer_name,
-        "substitute": substitutes.get(s.id) or substitutes.get("*"),
+        "substitute": None,
         "school": s.school,
         "students": headcount,
         "from": {"date": s.date.isoformat(), "start": s.start_iso(), "end": s.end_iso(), "room": s.room, "label": fmt_slot(s.date, s.start_min, s.end_min)},
@@ -416,6 +455,7 @@ def explain_proposal(proposal_id: str) -> dict:
     lines = [
         f"**{p['title']}** - proposal {p['id']} v{p['version']} ({p['status']}).",
         f"{s['sessions']} sessions affected, {s['intake_groups']} intake groups, ~{s['students_affected']} students.",
+        f"Substitute lecturer: {s.get('substituted', 0)} (same time and room, no student affected); rescheduled: {s.get('rescheduled', 0)}.",
         f"Placed in a physical room: {s['placed_physical']} ({s['share_physical']:.0%}); online fallback: {s['placed_online']}; "
         f"unresolved: {s['unresolved']}. Solved in {p['stats'].get('total_s')} s ({p['stats'].get('status')}); "
         f"automatic clash check: {'PASSED - zero group, lecturer or room clashes' if s['clash_check']['passed'] else 'FAILED'}.",
@@ -429,9 +469,10 @@ def explain_proposal(proposal_id: str) -> dict:
     else:
         for m in p["moves"]:
             table.append({
+                "type": m["type"],
                 "session": f"{m['module_name']} ({m['lecturer_id']})",
                 "from": f"{m['from']['label']} {m['from']['room']}",
-                "to": f"{m['to']['label']} {m['to']['room']}",
+                "to": (f"same slot, taught by {m['substitute']}" if m["type"] == "SUBSTITUTE" else f"{m['to']['label']} {m['to']['room']}"),
                 "groups": ", ".join(f"{g['intake']}/{g['grouping']}" for g in m["affected_groups"][:4]) + (" ..." if len(m["affected_groups"]) > 4 else ""),
                 "rules": ", ".join(m["rule_ids"]),
                 "why": m["rationale"],
@@ -466,7 +507,12 @@ def apply_moves_to_dataset(ds: Dataset, moves: list[dict], proposal_id: str) -> 
         s.date, s.start_min, s.end_min = nd, ns.hour * 60 + ns.minute, ne.hour * 60 + ne.minute
         s.room = m["to"]["room"]
         s.moved_by = proposal_id
-        lect = m.get("substitute") or s.lecturer_id
+        if m.get("type") == "SUBSTITUTE" and m.get("substitute"):
+            s.lecturer_id = m["substitute"]
+            s.lecturer_name = ds.lecturer_names.get(m["substitute"], m["substitute"])
+            ds.by_lecturer[m["lecturer_id"]] = [x for x in ds.by_lecturer[m["lecturer_id"]] if x != s.id]
+            ds.by_lecturer[s.lecturer_id].append(s.id)
+        lect = s.lecturer_id
         if s.room not in ds.rooms:
             from ..data.catalog import build_room
 

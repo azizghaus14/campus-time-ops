@@ -1,15 +1,14 @@
 """REST API for the Ops Dashboard. Same service functions as the MCP tools."""
 from __future__ import annotations
 
-import base64
 from typing import Any, Optional
 
-from fastapi import APIRouter, Body, File, Form, Query, UploadFile
+from fastapi import APIRouter, Body, Query
 from pydantic import BaseModel, Field
 
 from .config import settings
 from .data.loader import get_dataset
-from .services import audit, holidays, mrz, proposals, replan, rooms, shuttle, slots, timetable, visa
+from .services import attendance, audit, holidays, proposals, replan, rooms, shuttle, slots, substitutes, timetable
 from .services.policy import get_policy
 
 router = APIRouter(prefix="/api")
@@ -37,10 +36,6 @@ class RejectIn(BaseModel):
     reason: str = ""
 
 
-class SendIn(BaseModel):
-    confirm: bool = False
-
-
 class SlotsIn(BaseModel):
     groups: list[Any]
     lecturer_ids: list[str] = []
@@ -58,12 +53,6 @@ class SlotProposalIn(BaseModel):
     lecturer_ids: list[str] = []
     room: Optional[str] = None
     description: str = ""
-
-
-class PassportIn(BaseModel):
-    image_base64: Optional[str] = None
-    mrz_text: Optional[str] = None
-    student_id: Optional[str] = None
 
 
 # ------------------------------------------------------------- meta
@@ -85,23 +74,24 @@ def overview():
     median = solve_times[len(solve_times) // 2] if solve_times else None
     # Hours saved: baseline minutes per re-planned session is a PLACEHOLDER until team interviews (docs/METRICS.md)
     baseline_min_per_session = 20
+    subs = sum(p.get("summary", {}).get("substituted", 0) for p in executed)
     try:
-        risk = visa.visa_risk_sweep(limit=5)
-        at_risk = risk["at_risk"]
-        top_risk = risk["students"]
+        risk = attendance.attendance_risk_list(limit=5)
     except Exception:
-        at_risk, top_risk = None, []
+        risk = {"below_threshold": None, "at_risk": None, "students": []}
     return {
         **ov,
         "disruptions_active": [d for d in replan.list_disruptions() if d.get("status") in ("OPEN", "PLANNED")][:10],
         "pending_approvals": pend[:20],
-        "pending_count": len(pend),
-        "visa_at_risk": at_risk,
-        "visa_top": top_risk,
+        "attendance_top": risk["students"],
         "kpis": {
             "sessions_replanned": moved,
-            "proposals_executed": len(executed),
+            "substitutes_found": subs,
             "median_time_to_replan_s": median,
+            "pending_approvals": len(pend),
+            "students_below_threshold": risk["below_threshold"],
+            "students_at_risk": risk["at_risk"],
+            "proposals_executed": len(executed),
             "hours_saved_estimate": round(moved * baseline_min_per_session / 60, 1),
             "hours_saved_basis": f"{baseline_min_per_session} min manual effort per session (TBD-interview placeholder)",
         },
@@ -193,6 +183,11 @@ def list_disruptions():
     return {"disruptions": replan.list_disruptions()}
 
 
+@router.get("/sessions/{session_id}/substitutes")
+def subs_for(session_id: str):
+    return substitutes.find_substitutes(session_id)
+
+
 @router.get("/disruptions/{disruption_id}")
 def get_disruption(disruption_id: str, limit: int = Query(2000, le=5000)):
     return replan.get_disruption(disruption_id, True, limit)
@@ -233,11 +228,6 @@ def execute(proposal_id: str):
     return proposals.execute_proposal(proposal_id, who="dashboard")
 
 
-@router.post("/proposals/{proposal_id}/send")
-def send(proposal_id: str, body: SendIn):
-    return proposals.send_drafts(proposal_id, body.confirm, who="dashboard")
-
-
 @router.get("/audit")
 def audit_log(proposal_id: Optional[str] = None, limit: int = 500):
     return {"events": audit.list_audit(proposal_id, limit)}
@@ -254,58 +244,23 @@ def propose_slot(body: SlotProposalIn):
     return slots.create_slot_proposal(body.title, body.slot, body.groups, body.lecturer_ids, body.room, body.description, created_by="dashboard")
 
 
-# ------------------------------------------------------------- visa guardian
-@router.get("/visa/students")
-def students(international_only: bool = False, intake: Optional[str] = None, q: Optional[str] = None, limit: int = 200):
-    return visa.list_students(international_only, intake, q, limit)
+# ------------------------------------------------------------- attendance risk (read-only)
+@router.get("/attendance/students")
+def students(intake: Optional[str] = None, q: Optional[str] = None, limit: int = 200):
+    return attendance.list_students(intake, q, limit)
 
 
-@router.get("/visa/sweep")
-def sweep(limit: int = 100):
-    return visa.visa_risk_sweep(None, limit)
+@router.get("/attendance/risk")
+def risk(limit: int = 100):
+    return attendance.attendance_risk_list(None, limit)
 
 
-@router.post("/visa/daily-sweep")
-def daily(max_students: int = 25):
-    return visa.daily_sweep(max_students)
-
-
-@router.get("/visa/students/{student_id}")
+@router.get("/attendance/students/{student_id}")
 def student(student_id: str):
-    rec = visa.get_student_record(student_id)
-    f = visa.attendance_forecast(student_id)
-    lad = visa._ladder_state(student_id)
-    props = [p for p in proposals.list_proposals(kind="ESCALATION", compact=False) if p.get("student_id") == student_id]
-    return {"student": {k: v for k, v in rec.items() if k != "absences"}, "forecast": f, "ladder": lad, "escalations": props}
+    rec = attendance.get_student_record(student_id)
+    return {"student": {k: rec[k] for k in ("id", "name", "intake", "grouping")}, "forecast": attendance.attendance_forecast(student_id)}
 
 
-@router.get("/visa/students/{student_id}/attendance")
-def attendance(student_id: str):
-    return visa.get_attendance(student_id)
-
-
-@router.post("/visa/students/{student_id}/escalate")
-def escalate(student_id: str, step: Optional[str] = None):
-    return visa.plan_escalation(student_id, step, created_by="dashboard")
-
-
-@router.post("/visa/passport")
-def passport_json(body: PassportIn):
-    return mrz.parse_passport_image(body.image_base64, body.mrz_text, body.student_id)
-
-
-@router.post("/visa/passport/upload")
-async def passport_upload(file: UploadFile = File(...), student_id: Optional[str] = Form(None)):
-    raw = await file.read()
-    return mrz.parse_passport_image(student_id=student_id, image_bytes=raw)
-
-
-@router.get("/visa/demo-passports")
-def demo_passports():
-    import json
-
-    p = settings.data_dir / "demo_passports" / "manifest.json"
-    items = json.loads(p.read_text()) if p.exists() else []
-    for i in items:
-        i["url"] = f"{settings.public_base_url}/demo-passports/{i['file']}"
-    return {"passports": items}
+@router.get("/attendance/students/{student_id}/records")
+def records(student_id: str):
+    return attendance.get_attendance(student_id)

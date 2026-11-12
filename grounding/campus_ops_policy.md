@@ -5,7 +5,7 @@ Every rule has an ID that the agents and the solver cite. Each rule is labelled:
 
 - **[QUOTED]**: taken from an APU document (source and section given). These are real APU rules.
 - **[ASSUMPTION]**: a rule we chose for the prototype. It is plausible but not confirmed by APU. A human must confirm it before production use.
-- **[VERIFY]**: the value must be confirmed with APU or EMGS. It is configurable in `.env`.
+- **[VERIFY]**: the value must be confirmed with APU. It is configurable in `.env`.
 
 Sources:
 - *APU Student Handbook, Version 8.0, 1 July 2023* (`APU_Student_Handbook_Jul2023.pdf`), called **HB** below.
@@ -25,13 +25,10 @@ Sessions include all tutor-led activities: lectures, seminars, tutorials and pre
 > "Students who do not fulfil the minimum attendance requirement of 80% will not be allowed to sit for the final examination." (HB §10.2, p.30)
 
 ### R-ATT-4C: Four consecutive absences [QUOTED]
-If a student misses a module on **four consecutive occasions** in a semester, for a reason other than personal illness and without written approval, the student "may be deemed to have withdrawn from the module(s)" (HB §2.2, p.8). Visa Guardian flags 3 consecutive absences as an early warning.
+If a student misses a module on **four consecutive occasions** in a semester, for a reason other than personal illness and without written approval, the student "may be deemed to have withdrawn from the module(s)" (HB §2.2, p.8). Attendance Risk flags 3 consecutive absences as an early warning.
 
-### R-VISA-ATT: Student-pass attendance requirement [VERIFY]
-International students must keep up the attendance that the Malaysian student pass (EMGS / Immigration) requires. **Prototype default: 80%**, which is the same as R-ATT-80. It is set by `ATTENDANCE_THRESHOLD`. The team must confirm the exact figure and the renewal timelines with the APU International Office or EMGS.
-
-### R-PASSPORT: Passport validity [ASSUMPTION / VERIFY]
-A student's passport should stay valid beyond the student pass expiry date, so that the pass can be renewed. Visa Guardian flags any passport that expires **before** the pass expiry, and any passport that expires within 6 months. The team must confirm the exact validity window with the International Office.
+### R-ATT-THRESHOLD: Attendance threshold used for forecasts [VERIFY]
+Attendance Risk forecasts use `ATTENDANCE_THRESHOLD`, which defaults to **80%** to match R-ATT-80. This is the prototype's reading of the APU attendance rule, so the team must **verify** it with APU Academic Administration. Attendance Risk is a **read-only** view that covers all students. It never takes an action.
 
 ## 2. Timetable changes
 
@@ -75,6 +72,18 @@ The room's capacity must be at least the session's headcount. Room capacities an
 ### R-ROOM-TYPE: Room type [ASSUMPTION]
 Use the same type of room: a classroom moves to a classroom, a lab to a lab, an auditorium to an auditorium or a large classroom. A specialist room (studio, workshop, geology lab, iMac suite and so on) can only be replaced by **the same room**, because its equipment is specific to it.
 
+## 3b. Substitute lecturers (first resort when a lecturer is unavailable)
+
+### R-SUB-MODULE: A substitute must teach the same module [ASSUMPTION]
+A substitute must already teach the **same module** somewhere in the live timetable. That means either the same module section (the same `MODID`), or the same module (the `MODID` without its section suffix, such as `CT044-3-1-IOOP` from `CT044-3-1-IOOP-L-8`, or the same module name). Ranking: same section first, then same module. Within those, lecturers from the same school rank higher, then lecturers with the lowest load that day.
+
+### R-SUB-FREE: A substitute must be free [ASSUMPTION, obviously required]
+The substitute must have no overlapping session for the whole slot. This includes other sessions they are covering in the same proposal.
+
+### R-SUB-LOAD: Daily load cap [ASSUMPTION]
+Covering a session must not take the substitute above **3 sessions on that day** (`SUB_MAX_DAILY_SESSIONS`).
+A substitute keeps the session's original time and room, so **no student is affected**. If no substitute qualifies, or the approver declines the substitute, the session is rescheduled by the solver. The substitute is asked to confirm by a Gmail draft that a human sends.
+
 ## 4. Quality (soft objectives)
 
 ### R-LOAD: Student wellbeing [ASSUMPTION]
@@ -86,23 +95,10 @@ Prefer daytime. Physical evening make-up classes are already excluded by R-SHUTT
 ### R-ONLINE: Online fallback [ASSUMPTION]
 If no physical slot satisfies every hard rule, the session may be proposed **online** at a feasible time. This is shown explicitly, and the approver must accept it.
 
-### R-UNRESOLVED: Escalate what cannot be placed [ASSUMPTION]
+### R-UNRESOLVED: Report what cannot be placed [ASSUMPTION]
 A session that cannot be placed is listed with its reason and the options: go online, extend the horizon, use a substitute lecturer, or cancel. It is never silently dropped.
 
 ## 5. Human in the loop
 
 ### R-HITL: A human approves every action [DESIGN RULE]
-No agent sends an email, changes a calendar, writes the change log or issues a warning without a proposal in `APPROVED` status. The approval is recorded in the audit log. Emails are created as **drafts**. Sending them needs a second, separate confirmation.
-
-## 6. Visa Guardian escalation ladder [ASSUMPTION]
-
-Each step is a draft proposal that the **International Office approves**. The wording supports the student and offers help. It never threatens.
-
-| Step | ID | Trigger | Action |
-|---|---|---|---|
-| 1 | R-ESC-1 Nudge | Projected below the threshold, or max more absences ≤ 3 | A friendly email draft from the advisor with the exact numbers |
-| 2 | R-ESC-2 Advisor meeting | Current attendance < threshold + 3 pts, or 3 consecutive absences | A Calendar slot found with Slot Finder (student group free + advisor) |
-| 3 | R-ESC-3 Formal letter | Current attendance < threshold | A formal letter (Google Doc from a template) citing R-ATT-80 and R-VISA-ATT, with the support options |
-| 4 | R-ESC-4 International Office review | After R-ESC-3, or the pass/passport is at risk | The International Office reviews the case before anything is reported to an authority |
-
-A student who has a valid extenuating-circumstances claim (HB §10.4) is routed to support, not escalation.
+No agent sends an email, changes a calendar or writes the change log without a proposal in `APPROVED` status. The approval is recorded in the audit log. The system only ever creates Gmail **drafts**. A human reviews each draft and sends it from Gmail.

@@ -1,9 +1,9 @@
-"""Workspace actions: Calendar events, Gmail DRAFTS, change-log Doc.
+"""Workspace actions: Calendar events, Gmail DRAFTS (never sent by the system), change-log Doc.
 
 Two providers behind one interface:
   LocalWorkspace  (WORKSPACE_MODE=local, default): writes real .ics / .eml / .md artefacts into data/outbox and returns
                   links served by the API at /outbox/... - fully offline, used for the recorded demo fallback.
-  GoogleWorkspace (WORKSPACE_MODE=google): Google Calendar API, Gmail API (drafts.create - never send), Docs API.
+  GoogleWorkspace (WORKSPACE_MODE=google): Google Calendar API, Gmail API (drafts.create only), Docs API.
                   DEMO WORKSPACE ACCOUNTS ONLY - every recipient must be on WORKSPACE_DEMO_DOMAIN.
 
 These functions are only ever called from proposals.execute_* which enforces an APPROVED proposal (R-HITL).
@@ -70,8 +70,6 @@ class Workspace(Protocol):
     def create_events(self, ref: str, events: list[CalendarEvent]) -> dict: ...
     def create_drafts(self, ref: str, drafts: list[Draft]) -> dict: ...
     def append_changelog(self, ref: str, title: str, markdown: str) -> dict: ...
-    def send_drafts(self, ref: str, draft_ids: list[str]) -> dict: ...
-    def create_doc(self, ref: str, title: str, markdown: str) -> dict: ...
 
 
 def _ics_dt(s: str) -> str:
@@ -150,19 +148,6 @@ class LocalWorkspace:
             f.write(f"\n---\n\n## {title}\n\n{markdown}\n")
         return {"doc_url": self._url(p), "title": "Timetable Change Log"}
 
-    def create_doc(self, ref: str, title: str, markdown: str) -> dict:
-        d = self.root / ref
-        d.mkdir(parents=True, exist_ok=True)
-        p = d / (re.sub(r"[^A-Za-z0-9_-]+", "_", title)[:60] + ".md")
-        p.write_text(f"# {title}\n\n{markdown}\n")
-        return {"doc_url": self._url(p), "title": title}
-
-    def send_drafts(self, ref: str, draft_ids: list[str]) -> dict:
-        d = self.root / ref / "sent"
-        d.mkdir(parents=True, exist_ok=True)
-        (d / "SENT_LOG.json").write_text(json.dumps({"sent": draft_ids, "at": datetime.now(MYT).isoformat(), "note": "local mode: simulated send to demo addresses"}))
-        return {"sent": len(draft_ids), "mode": "local-simulated"}
-
 
 class GoogleWorkspace:  # pragma: no cover - needs demo Workspace credentials
     mode = "google"
@@ -228,15 +213,7 @@ class GoogleWorkspace:  # pragma: no cover - needs demo Workspace credentials
         self._append(doc_id, f"\n{title}\n{markdown}\n")
         return {"doc_url": f"https://docs.google.com/document/d/{doc_id}/edit", "title": "Timetable Change Log", "doc_id": doc_id}
 
-    def create_doc(self, ref: str, title: str, markdown: str) -> dict:
-        doc_id = self.docs.documents().create(body={"title": title}).execute()["documentId"]
-        self._append(doc_id, markdown)
-        return {"doc_url": f"https://docs.google.com/document/d/{doc_id}/edit", "title": title, "doc_id": doc_id}
 
-    def send_drafts(self, ref: str, draft_ids: list[str]) -> dict:
-        for d in draft_ids:
-            self.gmail.users().drafts().send(userId="me", body={"id": d}).execute()
-        return {"sent": len(draft_ids), "mode": "google"}
 
 
 _ws: Optional[Workspace] = None

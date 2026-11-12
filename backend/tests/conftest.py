@@ -1,7 +1,7 @@
 import pytest
 
 from app.data.loader import get_dataset, reset_dataset
-from app.services import holidays, visa
+from app.services import attendance, holidays
 from app.services.store import JsonStore, set_store
 from app.services.workspace import LocalWorkspace, set_workspace
 
@@ -21,7 +21,7 @@ def isolated_state(tmp_path):
 @pytest.fixture
 def fresh_dataset():
     reset_dataset()
-    visa.reload_students()
+    attendance.reload_students()
     ds = get_dataset()
     yield ds
     reset_dataset()
