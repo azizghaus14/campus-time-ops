@@ -3,7 +3,7 @@
 **AI agents that re-plan APU's live timetable, with a human approving every step.**
 APU Cloud Innovation Hackathon 2026, Category 02: Intelligent Automation & Digital Transformation.
 
-**Live demo:** https://campus-time-ops.onrender.com (free plan: the first visit after 15 idle minutes takes ~50 s to wake up)
+**Live demo:** https://campus-time-ops.onrender.com
 
 > *We didn't build a chatbot. We built the layer that lets AI agents actually run university operations, on APU's live timetable, APU's real holidays and APU's own regulations, with a human approving every step.*
 
