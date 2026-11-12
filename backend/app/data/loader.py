@@ -67,8 +67,19 @@ def _snapshot_paths(data_dir: Path) -> tuple[Path, Optional[Path]]:
     snap = data_dir / "snapshots"
     latest = (snap / "LATEST").read_text().strip()
     tt = snap / f"timetable_{latest}.json"
+    if not tt.exists() and tt.with_suffix(".json.gz").exists():
+        tt = tt.with_suffix(".json.gz")  # compressed copy (used where hosts limit file size)
     it = snap / f"intakes_{latest}.json"
     return tt, (it if it.exists() else None)
+
+
+def _read_json(p: Path):
+    if p.suffix == ".gz":
+        import gzip
+
+        with gzip.open(p, "rt", encoding="utf-8") as f:
+            return json.load(f)
+    return json.loads(p.read_text())
 
 
 def _load_rows() -> tuple[list[dict], dict, list[str]]:
@@ -86,8 +97,8 @@ def _load_rows() -> tuple[list[dict], dict, list[str]]:
         except Exception as e:  # any error -> snapshot
             log.warning("live fetch failed (%s); falling back to snapshot", e)
     tt, it = _snapshot_paths(data_dir)
-    payload = json.loads(tt.read_text())
-    meta = payload.get("meta", {}) | {"mode": "snapshot", "snapshot_file": tt.name}
+    payload = _read_json(tt)
+    meta = payload.get("meta", {}) | {"mode": "snapshot", "snapshot_file": tt.name.replace(".gz", "")}
     intakes = [i["INTAKE_CODE"] for i in json.loads(it.read_text())] if it else []
     return payload["rows"], meta, intakes
 
