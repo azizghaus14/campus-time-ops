@@ -129,7 +129,7 @@ function Assistant({ session }: { session: Session }) {
               <div className="max-w-[80%] rounded-[22px] rounded-br-md bg-white/[0.08] border border-white/[0.06] px-4 py-2.5 text-[15px]">{m.text}</div>
             ) : (
               <div className="flex gap-3">
-                <div className="shrink-0 -mt-0.5"><Orb state={m.pending ? m.orb || "searching" : "working"} size={36} tint={m.pending ? "blue" : "violet"} halo={m.pending} /></div>
+                <div className="shrink-0 -mt-1 relative h-10 w-10 rounded-full grid place-items-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] ring-1 ring-white/15 shadow-[0_0_24px_-4px_rgba(139,124,255,0.6)]"><Orb state={m.pending ? m.orb || "searching" : "working"} size={32} tint={m.pending ? "blue" : "violet"} halo /></div>
                 <div className="min-w-0 flex-1 space-y-3">
                   {m.pending ? (
                     <div className="text-[14px] pt-2"><span className="shimmer">{m.orb === "solving" ? "Reading the live timetable and running the solver…" : m.orb === "connecting" ? "Applying the approved plan…" : m.orb === "weaving" ? "Finding a time when everyone is free…" : "Looking that up…"}</span></div>

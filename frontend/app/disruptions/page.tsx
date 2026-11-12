@@ -47,7 +47,7 @@ function Disruptions() {
             )}
           </Card>
         </div>
-        <div className="min-w-0">{id ? <Detail key={id} id={id} autoplan={sp.get("autoplan") === "1"} onChange={reload} /> : <Card><Empty>Create or pick a disruption — or use a demo scenario on the Overview.</Empty></Card>}</div>
+        <div className="min-w-0">{id ? <Detail key={id} id={id} autoplan={sp.get("autoplan") === "1"} onChange={reload} /> : <Card><Empty>Create or pick a disruption, or just tell the Assistant what happened.</Empty></Card>}</div>
       </div>
     </div>
   );

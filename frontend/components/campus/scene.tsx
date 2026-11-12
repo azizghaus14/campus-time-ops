@@ -124,7 +124,7 @@ function Scene(p: Props) {
         <Bloom intensity={0.9} luminanceThreshold={0.18} luminanceSmoothing={0.35} mipmapBlur radius={0.7} />
         <Vignette eskil={false} offset={0.25} darkness={0.75} />
       </EffectComposer>
-      <OrbitControls makeDefault enableDamping dampingFactor={0.08} minDistance={40} maxDistance={220} maxPolarAngle={Math.PI / 2.3} target={[0, 6, 2]} />
+      <OrbitControls makeDefault enableDamping dampingFactor={0.08} minDistance={40} maxDistance={220} maxPolarAngle={Math.PI / 2.3} target={[-7, 6, 9]} />
     </>
   );
 }
@@ -142,6 +142,7 @@ function PinProjector({ layout, selected, refs }: { layout: any; selected: strin
       const x = (v.x * 0.5 + 0.5) * size.width, y = (-v.y * 0.5 + 0.5) * size.height;
       el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%)`;
       el.style.visibility = v.z > 1 ? "hidden" : "visible";
+      el.classList.remove("invisible");
     }
   });
   return null;
@@ -152,7 +153,7 @@ export default function CampusCanvas(props: Props) {
   const pinRefs = useRef<Record<string, HTMLDivElement | null>>({});
   return (
     <div className="relative h-full w-full">
-      <Canvas camera={{ position: [122, 108, 122], fov: 30, near: 1, far: 600 }} dpr={[1, 2]} gl={{ antialias: true }}
+      <Canvas camera={{ position: [115, 108, 129], fov: 30, near: 1, far: 600 }} dpr={[1, 2]} gl={{ antialias: true }}
         onCreated={() => setReady(true)} style={{ opacity: ready ? 1 : 0, transition: "opacity .6s" }}>
         <Scene {...props} />
         <PinProjector layout={props.layout} selected={props.selected} refs={pinRefs} />
@@ -162,7 +163,7 @@ export default function CampusCanvas(props: Props) {
           const pin = props.pins[b.id] || { used: 0, total: b.rooms, affected: 0 };
           const dim = props.selected !== null && props.selected !== b.id;
           return (
-            <div key={b.id} ref={(el) => { pinRefs.current[b.id] = el; }} className="absolute left-0 top-0 will-change-transform"
+            <div key={b.id} ref={(el) => { pinRefs.current[b.id] = el; }} className="absolute left-0 top-0 will-change-transform invisible"
               style={{ opacity: dim ? 0 : 1, transition: "opacity .3s" }}>
               <button onClick={() => props.onSelect(props.selected === b.id ? null : b.id)} className={cn("select-none whitespace-nowrap flex items-center gap-2 rounded-full border bg-[#14141c]/80 backdrop-blur-md pl-1 pr-3 py-1 shadow-[0_10px_30px_-10px_rgba(0,0,0,.8)]", dim ? "pointer-events-none" : "pointer-events-auto", pin.affected ? "border-[var(--red)]/50" : "border-white/15")}>
                 <span className="relative grid place-items-center h-7 w-7 rounded-full" style={{ background: `conic-gradient(${pin.affected ? "#ff5c6c" : "#8b7cff"} ${(pin.used / Math.max(1, pin.total)) * 360}deg, rgba(255,255,255,.08) 0)` }}>

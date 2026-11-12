@@ -49,6 +49,7 @@ body {
 /* ---------- liquid glass ----------
    A tinted, heavily blurred body so text always reads, a specular top highlight, a hairline rim that is brighter
    at the top-left (light source) and a faint refracted glow along the bottom edge. */
+@layer components {
 .panel, .glass-strong {
   position: relative;
   isolation: isolate;
@@ -71,6 +72,7 @@ body {
   -webkit-mask-composite: xor; mask-composite: exclude;
 }
 .glass-strong { --panel: rgba(18, 18, 26, 0.74); }
+}
 .muted { color: var(--muted); }
 .faint { color: var(--faint); }
 .mono { font-family: var(--font-mono); }
