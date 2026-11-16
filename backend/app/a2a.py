@@ -16,6 +16,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
+from .config import settings
 from .services import gemini
 from .services.identity import Identity
 
@@ -71,9 +72,9 @@ def make_router(secret: str) -> APIRouter:
     @r.get("/.well-known/agent-card.json")
     @r.get("/.well-known/agent.json")
     def card(request: Request):
-        base = str(request.url).split("/a2a")[0] + "/a2a"
-        if base.startswith("http://") and "localhost" not in base and "testserver" not in base:
-            base = "https://" + base[len("http://"):]
+        # behind the Next.js front the backend only sees 127.0.0.1, so advertise the public URL (RENDER_EXTERNAL_URL)
+        public = settings.public_base_url.rstrip("/")
+        base = f"{public}/g/{secret}/a2a" if public.startswith("https://") else str(request.url).split("/a2a")[0] + "/a2a"
         return _card(base)
 
     @r.post("")
