@@ -56,7 +56,7 @@ def _decl(name: str, desc: str, props: dict[str, tuple[str, str]], required: tup
     return d
 
 
-def _tools(who: Identity) -> dict[str, tuple[dict, Callable[..., Any]]]:
+def _tools(who: Identity, planning: bool = False) -> dict[str, tuple[dict, Callable[..., Any]]]:
     t: dict[str, tuple[dict, Callable[..., Any]]] = {}
 
     def add(name, desc, props, required, fn):
@@ -117,12 +117,45 @@ def _tools(who: Identity) -> dict[str, tuple[dict, Callable[..., Any]]]:
         lambda duration_min, window_start, window_end, groups="", lecturer_ids="", room_type=None: slots.find_common_slots(
             _csv(groups), [x.upper() for x in _csv(lecturer_ids)], int(duration_min), {"start": window_start, "end": window_end},
             {"type": room_type} if room_type else None, 1))
+    if planning:
+        add("draft_replan", "Re-plan after a disruption and return a DRAFT plan (substitute lecturers first, then a clash-free reschedule "
+            "by the OR-Tools CP-SAT solver). It never approves or applies anything. kind: LECTURER_UNAVAILABLE (needs lecturer_id, "
+            "start_date, end_date), ROOM_UNAVAILABLE (needs rooms, end_date) or HOLIDAY (needs start_date = the holiday).",
+            {"kind": (S, "LECTURER_UNAVAILABLE | ROOM_UNAVAILABLE | HOLIDAY"), "lecturer_id": (S, "e.g. MZD"),
+             "rooms": (S, "comma-separated, e.g. B-04-03"), "start_date": DATE, "end_date": DATE, "reason": (S, "short reason")},
+            ("kind",), _draft_replan)
     if who.role == "admin":
         add("attendance_forecast", "One (synthetic) student's attendance forecast and how many more classes they can miss.",
             {"student_id": (S, "e.g. STU-DEMO-01")}, ("student_id",), lambda student_id: _forecast(student_id.upper()))
         add("attendance_risk_list", "Students below or heading towards the attendance threshold (read-only).", {"limit": (I, "max rows")}, (),
             lambda limit=20: attendance.attendance_risk_list(None, int(limit)))
     return t
+
+
+def _draft_replan(kind: str, lecturer_id: str = "", rooms: str = "", start_date: str = "", end_date: str = "", reason: str = "") -> dict:
+    """Create the disruption and a DRAFT plan (substitutes first, then CP-SAT). Never approves or executes."""
+    k = (kind or "").strip().upper()
+    if k in ("LECTURER", "LECTURER_UNAVAILABLE", "SICK"):
+        if not lecturer_id:
+            return {"error": "lecturer_id is required"}
+        b = end_date or start_date
+        d = replan.create_disruption("LECTURER_UNAVAILABLE", {"lecturer_id": lecturer_id.upper()}, {"start": start_date, "end": b}, reason, "Gemini Enterprise agent")
+    elif k in ("ROOM", "ROOM_UNAVAILABLE"):
+        rms = [r.upper() for r in _csv(rooms)]
+        if not rms:
+            return {"error": "rooms is required"}
+        d = replan.create_disruption("ROOM_UNAVAILABLE", {"rooms": rms}, {"start": settings.now().isoformat(), "end": end_date or start_date},
+                                     reason, "Gemini Enterprise agent")
+    elif k in ("HOLIDAY", "CAMPUS_HOLIDAY"):
+        d = replan.create_disruption("HOLIDAY", {"date": start_date, "name": reason or "Declared public holiday"}, None, reason, "Gemini Enterprise agent")
+    else:
+        return {"error": "kind must be LECTURER_UNAVAILABLE, ROOM_UNAVAILABLE or HOLIDAY"}
+    if not d["impact"]["sessions"]:
+        return {"headline": d["headline"], "note": "No upcoming classes in that window: nothing to re-plan."}
+    pr = replan.plan_replan(d["id"], {}, created_by="Gemini Enterprise agent")
+    ex = replan.explain_proposal(pr["id"])
+    return {"headline": d["headline"], "proposal_id": pr["id"], "status": pr["status"], "summary": ex["text"],
+            "moves": ex.get("table", [])[:8], "note": "DRAFT only. A person must approve it in the Campus Time Ops app."}
 
 
 def _csv(s: Any) -> list[str]:
@@ -149,25 +182,28 @@ def _slim(x: Any, depth: int = 0) -> Any:
 
 
 # ------------------------------------------------------------------ prompt
-def _system(who: Identity) -> str:
+def _system(who: Identity, planning: bool = False) -> str:
     now = settings.now()
     tomorrow = now + timedelta(days=1)
     role = {"student": f"a student ({who.user})", "lecturer": f"lecturer {who.user}", "admin": "the APU timetabling office"}.get(who.role, "staff")
     student_rule = ("This user is a STUDENT: students cannot change the timetable or report anything. If they want a change, tell them to "
                     "contact their lecturer or the timetabling office. Never suggest the sentences above to a student."
                     if who.role == "student" else "Staff may type the sentences above to start a change.")
-    return f"""You are the Campus Time Ops assistant for Asia Pacific University (APU), Kuala Lumpur.
+    return f"""You are {"the Campus Time Ops agent inside Gemini Enterprise" if planning else "the Campus Time Ops assistant"} for Asia Pacific University (APU), Kuala Lumpur.
 You are talking to {role}. Now is {now:%A %d %B %Y, %H:%M} (Malaysia time, MYT, UTC+8). Tomorrow is {tomorrow:%A %d %B %Y}.
 Weeks run Monday to Friday. The timetable data covers about 10-28 November 2026.
 
 Rules:
 - Use the tools for every fact about classes, rooms, lecturers, holidays, shuttles and attendance. Never invent data. If a tool returns an error or nothing, say so plainly.
-- You can only LOOK THINGS UP and explain. You cannot change the timetable, create plans, approve or send anything.
+{ "- You can LOOK THINGS UP and DRAFT re-plans with draft_replan (when the user reports a sick/unavailable lecturer, a closed room or a holiday). "
+   "Report the draft clearly: classes affected, students, how many covered by a substitute, how many moved and where, and the proposal id. "
+   "You can NEVER approve, apply or send anything: say a person reviews and approves the draft in the Campus Time Ops app."
+   if planning else "- You can only LOOK THINGS UP and explain. You cannot change the timetable, create plans, approve or send anything." }
   If the user wants a change, tell them the exact sentence to type, e.g. "I'm sick tomorrow, sort out my classes", "Room B-04-03 is flooded until Friday",
   "Monday 16 Nov is now a public holiday" or "find a 45 minute slot next week for 6 vivas with CMM, MSB and RJR". Those go through a plan a person must approve.
 - {student_rule}
 - Lecturers are identified by short pseudonymised ids (e.g. MZD); student data is synthetic. Attendance threshold is 80% per module (APU Student Handbook).
-- Answer in 1-4 short sentences of plain English. Lead with the answer. Use **bold** for the key number or name. No tables, no headings, no lists longer than 4 items.
+- {"Answer in plain English, short. After a draft, use up to 6 short lines." if planning else "Answer in 1-4 short sentences of plain English."} Lead with the answer. Use **bold** for the key number or name. No tables, no headings, no lists longer than 4 items.
 - Times as 24h HH:MM, dates like "Fri 13 Nov"."""
 
 
@@ -180,20 +216,25 @@ def _post(body: dict, timeout: float) -> dict:
     return r.json()
 
 
-def answer(message: str, who: Identity) -> Optional[dict]:
-    """-> {"reply", "cards", "engine": "gemini", "tools_used"} or None if Gemini is off or failed."""
-    if not enabled():
+def answer(message: str, who: Identity, planning: bool = False, history: Optional[list[dict]] = None,
+           budget_s: float = BUDGET_S) -> Optional[dict]:
+    """-> {"reply", "cards", "engine": "gemini", "tools_used"} or None if Gemini is off or failed.
+    planning=True (Gemini Enterprise agent) adds draft_replan; history = earlier [{"role": "user"|"model", "text": ...}]."""
+    if not _key():
+        return None
+    if not planning and not enabled():
         return None
     t0 = time.monotonic()
     try:
-        tools = _tools(who)
+        tools = _tools(who, planning)
     except ToolError:
         return None
+    past = [{"role": h["role"], "parts": [{"text": h["text"][:3000]}]} for h in (history or [])[-10:]]
     body: dict[str, Any] = {
-        "systemInstruction": {"parts": [{"text": _system(who)}]},
-        "contents": [{"role": "user", "parts": [{"text": message[:2000]}]}],
+        "systemInstruction": {"parts": [{"text": _system(who, planning)}]},
+        "contents": past + [{"role": "user", "parts": [{"text": message[:2000]}]}],
         "tools": [{"functionDeclarations": [d for d, _ in tools.values()]}],
-        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 600},
+        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 900 if planning else 600},
     }
     m = model()
     if m.startswith("gemini-2.5-flash"):
@@ -204,11 +245,11 @@ def answer(message: str, who: Identity) -> Optional[dict]:
     sched: Optional[tuple[str, list]] = None
     try:
         for _ in range(MAX_ROUNDS):
-            left = BUDGET_S - (time.monotonic() - t0)
+            left = budget_s - (time.monotonic() - t0)
             if left < 2:
                 log.warning("Gemini fallback: time budget used up after %s", used)
                 return None
-            data = _post(body, timeout=min(20.0, left))
+            data = _post(body, timeout=min(25.0, left))
             cand = (data.get("candidates") or [{}])[0]
             parts = (cand.get("content") or {}).get("parts") or []
             calls = [p["functionCall"] for p in parts if "functionCall" in p]

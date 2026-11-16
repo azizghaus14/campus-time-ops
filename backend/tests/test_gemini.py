@@ -85,3 +85,10 @@ def test_gemini_enterprise_connector_cannot_approve_or_execute():
     names = {f.__name__ for f in GEMINI_TOOLS}
     assert not names & {"approve_proposal", "execute_proposal", "reject_proposal", "create_slot_proposal"}
     assert {"plan_replan", "create_disruption", "get_lecturer_schedule"} <= names
+
+
+def test_planning_tool_only_in_agent_mode_and_never_approves():
+    assert "draft_replan" in gemini._tools(A, planning=True)
+    assert "draft_replan" not in gemini._tools(A) and "draft_replan" not in gemini._tools(S, planning=False)
+    r = gemini._draft_replan("LECTURER_UNAVAILABLE", lecturer_id="MZD", start_date="2026-11-13", end_date="2026-11-13", reason="sick")
+    assert r["status"] == "DRAFT" and r["proposal_id"]

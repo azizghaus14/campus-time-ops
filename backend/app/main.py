@@ -113,6 +113,9 @@ settings.outbox_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/outbox", StaticFiles(directory=str(settings.outbox_dir)), name="outbox")
 # Gemini Enterprise connector: read + draft-planning tools only, at a secret path (only when MCP_PUBLIC_SECRET is set)
 if GEMINI_MOUNTED:
+    from .a2a import make_router as _a2a_router
+
+    app.include_router(_a2a_router(PUBLIC_SECRET))  # Gemini Enterprise custom A2A agent (routes before the mounts below)
     app.mount(f"/g/{PUBLIC_SECRET}", gemini_mcp.streamable_http_app())
 # MCP streamable HTTP at /mcp (mounted last so /api routes match first)
 app.mount("/", mcp.streamable_http_app())
