@@ -255,6 +255,34 @@ def attendance_risk_list(date: Optional[str] = None, limit: int = 30) -> dict:
     return attendance.attendance_risk_list(date, limit)
 
 
+# ------------------------------------------------------------- Gemini Enterprise connector (secret URL, no approve/execute)
+# Gemini Enterprise's "Custom MCP Server" connector is used with "No authentication", so this second server is reachable
+# only at a long secret path (/g/<MCP_PUBLIC_SECRET>/mcp) and exposes read + DRAFT-planning tools only. Approving and
+# executing stay in the Campus Time Ops app, where a person clicks Approve (R-HITL).
+import os as _os
+
+GEMINI_TOOLS = [
+    get_lecturer_schedule, get_group_schedule, get_room_schedule, find_free_rooms, get_sessions_on, search_lecturers,
+    search_intakes, get_holidays, get_last_shuttle, get_room_utilisation, empty_rooms_now, timetable_health, get_policy,
+    create_disruption, find_substitutes, plan_replan, explain_proposal, get_proposal, list_proposals, find_common_slots,
+    search_students, attendance_forecast, attendance_risk_list,
+]
+PUBLIC_SECRET = _os.environ.get("MCP_PUBLIC_SECRET", "").strip()
+gemini_mcp = FastMCP(
+    "campus-time-ops-gemini",
+    instructions=INSTRUCTIONS.replace(
+        "Read tools are free to call. Planning tools create DRAFT proposals only. The action tool (execute_proposal) refuses\n"
+        "anything that is not APPROVED: only call approve_proposal after the human user has explicitly said yes in chat (R-HITL).",
+        "Read tools are free to call. Planning tools create DRAFT proposals only. You cannot approve or execute: tell the user "
+        "the plan id and that a person approves it in the Campus Time Ops app (R-HITL)."),
+    stateless_http=True,
+    json_response=True,
+    streamable_http_path="/mcp",
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+)
+for _fn in GEMINI_TOOLS:
+    gemini_mcp.add_tool(_safe(_fn), name=_fn.__name__, description=(_fn.__doc__ or "").strip())
+
 if __name__ == "__main__":
     if "--stdio" in sys.argv:
         mcp.run(transport="stdio")

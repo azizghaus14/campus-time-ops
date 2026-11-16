@@ -78,3 +78,10 @@ def test_failure_falls_back_to_help(on, monkeypatch):
     monkeypatch.setattr(gemini.requests, "post", Fake({"status": 429, "parts": []}))
     r = handle("which day next week is my longest?", S)
     assert r.get("engine") is None and "how many more classes you can miss" in r["reply"]
+
+
+def test_gemini_enterprise_connector_cannot_approve_or_execute():
+    from app.mcp_server import GEMINI_TOOLS
+    names = {f.__name__ for f in GEMINI_TOOLS}
+    assert not names & {"approve_proposal", "execute_proposal", "reject_proposal", "create_slot_proposal"}
+    assert {"plan_replan", "create_disruption", "get_lecturer_schedule"} <= names
