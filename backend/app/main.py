@@ -15,6 +15,8 @@ from .api import router
 from .config import settings
 from .data.loader import get_dataset
 from .mcp_server import PUBLIC_SECRET, gemini_mcp, mcp
+
+GEMINI_MOUNTED = len(PUBLIC_SECRET) >= 24
 from .services import oauth as google_oauth
 from .services.errors import ToolError
 
@@ -36,7 +38,10 @@ def warm_start() -> dict:
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
     warm_start()
-    async with mcp.session_manager.run(), gemini_mcp.session_manager.run():
+    async with contextlib.AsyncExitStack() as stack:
+        await stack.enter_async_context(mcp.session_manager.run())
+        if GEMINI_MOUNTED:
+            await stack.enter_async_context(gemini_mcp.session_manager.run())
         yield
 
 
@@ -107,7 +112,7 @@ def reset_demo():
 settings.outbox_dir.mkdir(parents=True, exist_ok=True)
 app.mount("/outbox", StaticFiles(directory=str(settings.outbox_dir)), name="outbox")
 # Gemini Enterprise connector: read + draft-planning tools only, at a secret path (only when MCP_PUBLIC_SECRET is set)
-if len(PUBLIC_SECRET) >= 24:
+if GEMINI_MOUNTED:
     app.mount(f"/g/{PUBLIC_SECRET}", gemini_mcp.streamable_http_app())
 # MCP streamable HTTP at /mcp (mounted last so /api routes match first)
 app.mount("/", mcp.streamable_http_app())
