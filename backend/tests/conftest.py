@@ -30,3 +30,9 @@ def fresh_dataset():
 @pytest.fixture(scope="session")
 def ds():
     return get_dataset()
+
+
+@pytest.fixture(autouse=True)
+def no_live_gemini(monkeypatch):
+    """Tests never call the real Gemini API, even if GEMINI_API_KEY is in .env; Gemini tests mock it explicitly."""
+    monkeypatch.setenv("CHAT_GEMINI", "off")

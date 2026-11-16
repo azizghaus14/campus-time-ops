@@ -12,7 +12,7 @@ import { cn, fmtDate, num } from "@/lib/format";
 import { Session, useSession } from "@/lib/session";
 import { useApi } from "@/lib/use-api";
 
-type Msg = { id: number; from: "user" | "assistant"; text: string; cards?: any[]; pending?: boolean; orb?: OrbState };
+type Msg = { id: number; from: "user" | "assistant"; text: string; cards?: any[]; pending?: boolean; orb?: OrbState; engine?: string };
 
 function md(text: string) {
   return text.split(/(\*\*[^*]+\*\*)/g).map((p, i) => (p.startsWith("**") ? <b key={i} className="text-white font-semibold">{p.slice(2, -2)}</b> : <span key={i}>{p}</span>));
@@ -71,7 +71,7 @@ function Assistant({ session }: { session: Session }) {
     try {
       const r = await post<any>("/assistant", { message: t, context: ctx });
       setCtx(r.context || {});
-      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: r.reply, cards: r.cards, orb: "breathing" } : x)));
+      setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: r.reply, cards: r.cards, orb: "breathing", engine: r.engine } : x)));
     } catch (e: any) {
       setMsgs((m) => m.map((x) => (x.id === aid ? { id: aid, from: "assistant", text: `Something went wrong: ${e.message || e}` } : x)));
     } finally {
@@ -135,6 +135,11 @@ function Assistant({ session }: { session: Session }) {
                     <div className="text-[14px] pt-2"><span className="shimmer">{m.orb === "solving" ? "Reading the live timetable and running the solver…" : m.orb === "connecting" ? "Applying the approved plan…" : m.orb === "weaving" ? "Finding a time when everyone is free…" : "Looking that up…"}</span></div>
                   ) : (
                     <div className="text-[15px] leading-relaxed text-white/85">{md(m.text)}</div>
+                  )}
+                  {m.engine === "gemini" && (
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-gradient-to-r from-[#8b7cff]/15 to-[#4f8dff]/15 px-2.5 py-1 text-[11.5px] text-white/75">
+                      <Sparkles className="h-3 w-3 text-[#b6a9ff]" /> Answered by Gemini · read-only, it can't change anything
+                    </div>
                   )}
                   {m.cards?.map((c, i) => <RenderCard key={i} c={c} act={send} />)}
                 </div>

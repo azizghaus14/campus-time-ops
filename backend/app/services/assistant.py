@@ -1,8 +1,9 @@
 """In-app assistant: natural language -> the same service calls the MCP agents use -> reply text + rich UI cards.
 
 The in-app assistant is a deterministic, offline intent parser for exactly the operations this product does
-(disruptions, approvals/edits, slots, schedules, free rooms, attendance), so the demo never depends on the network.
-Open-ended language is the job of the Gemini Enterprise agents (agents/), which call the same functions over MCP.
+(disruptions, approvals/edits, slots, schedules, free rooms, attendance), so the core flows never depend on the network.
+Anything it does not recognise goes to Gemini (services/gemini.py) with read-only tools; the Gemini Enterprise agents
+(agents/) call the same functions over MCP.
 Human approval is preserved: planning only ever creates DRAFTs; only an explicit user "approve" (or the Approve
 button) approves + executes, and only if the signed-in role may approve (identity.can_approve).
 """
@@ -15,7 +16,7 @@ from typing import Any, Optional
 from ..config import MYT, settings
 from ..data.loader import get_dataset
 from ..domain import hhmm
-from . import attendance, proposals, replan, rooms, slots, timetable
+from . import attendance, gemini, proposals, replan, rooms, slots, timetable
 from .errors import ToolError
 from .identity import Identity, can_approve, can_create_disruption
 from .store import get_store
@@ -259,7 +260,7 @@ def handle(message: str, who: Identity, ctx: Optional[dict] = None) -> dict:
             return {"reply": reply, "cards": [_impact_card(d), _proposal_card(p, who)], "context": {"proposal_id": p["id"], "disruption_id": d["id"]}}
 
         # ---------------- lecturer unavailable
-        if re.search(r"\b(sick|ill|unwell|mc\b|medical|can.?t (make it|teach|come)|cannot (teach|come)|unavailable|away|leave|emergency|not (be )?(in|available|coming))\b", low):
+        if re.search(r"\b(sick|ill|unwell|mc\b|medical|can.?t (make it|teach|come)|cannot (teach|come)|unavailable|away|leave|emergency|not (be )?(in|available|coming))\b", low) and "shuttle" not in low:
             lects = find_lecturers(text)
             if who.role == "lecturer" and (not lects or lects == [who.user] or re.search(r"\b(i|i'm|im|my|me)\b", low)):
                 lid = who.user
@@ -359,6 +360,10 @@ def handle(message: str, who: Identity, ctx: Optional[dict] = None) -> dict:
             return {"reply": f"{who_txt} has **{n}** session{'s' if n != 1 else ''} {span}." + (" Moved sessions are highlighted." if any(s.get("moved_by") for s in r["sessions"]) else ""),
                     "cards": [_sched_card(f"{who_txt} · {span}", r["sessions"])], "context": ctx}
 
+        # ---------------- anything else: Gemini answers with read-only tools (falls back to help text if off or failing)
+        g = gemini.answer(text, who)
+        if g:
+            return {**g, "context": ctx}
         return {"reply": _help(who), "cards": [], "context": ctx}
     except ToolError as e:
         return {"reply": f"I couldn't do that: {e.message}", "cards": [{"type": "error", "code": e.code, "message": e.message, "details": e.details}], "context": ctx}
@@ -376,7 +381,8 @@ def _help(who: Identity) -> str:
 
 def suggestions(who: Identity) -> list[str]:
     if who.role == "student":
-        return ["How many more classes can I miss?", "What do I have tomorrow?", "What's my timetable this week?"]
+        extra = ["Who is my lecturer for my next lesson, and which room is it in?"] if gemini.enabled() else []
+        return ["How many more classes can I miss?", "What do I have tomorrow?", "What's my timetable this week?"] + extra
     if who.role == "lecturer":
         return ["I'm sick tomorrow, sort out my classes", "What do I have this week?",
                 "Find a 45 minute slot next week for 6 vivas with CMM, MSB and RJR", "Which rooms are free at 3pm?"]
@@ -385,4 +391,4 @@ def suggestions(who: Identity) -> list[str]:
 
 
 def engine_name() -> str:
-    return "rules"
+    return "rules+gemini" if gemini.enabled() else "rules"

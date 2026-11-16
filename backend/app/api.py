@@ -318,7 +318,7 @@ class ChatIn(BaseModel):
 def chat(body: ChatIn, x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
     w = who(x_demo_role, x_demo_user)
     out = assistant.handle(body.message, w if w.role != "agent" else Identity("admin"), body.context)
-    out["engine"] = assistant.engine_name()
+    out.setdefault("engine", "rules")
     return out
 
 
