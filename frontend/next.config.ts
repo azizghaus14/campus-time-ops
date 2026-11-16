@@ -12,6 +12,8 @@ const nextConfig: NextConfig = {
     return [
       { source: "/outbox/:path*", destination: `${BACKEND}/outbox/:path*` },
       { source: "/mcp", destination: `${BACKEND}/mcp` },
+      // Gemini Enterprise: A2A agent, its card and the MCP connector live at the secret /g/<secret>/ path
+      { source: "/g/:path*", destination: `${BACKEND}/g/:path*` },
     ];
   },
 };
