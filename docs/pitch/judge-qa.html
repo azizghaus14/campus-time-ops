@@ -14,6 +14,7 @@ th { font-size:9pt; text-transform:uppercase; letter-spacing:.04em; color:var(--
 tr { break-inside:avoid; }
 .map td:first-child { font-weight:600; width:20%; }
 .map td:last-child { width:19%; }
+.stack td:first-child { font-weight:600; width:16%; }
 .map .st { display:inline-block; margin-bottom:2px; white-space:normal; }
 .st { font-size:8.5pt; font-weight:700; padding:1px 6px; border-radius:9px; white-space:nowrap; }
 .live { background:#e3f6ea; color:#17713b; } .built { background:#eef0ff; color:#3d34a8; } .wait { background:var(--warn); color:#8a5a12; }
@@ -44,10 +45,44 @@ tr { break-inside:avoid; }
 
 <div class="box"><b>The honest one-liner on Gemini Enterprise:</b> <span class="say">"Our agent is registered in Gemini Enterprise and answers live. It drafts the sick-lecturer plan in about 9 seconds. Users can't open the Gemini Enterprise chat yet only because the hackathon project has no Google sign-in configured, which is an admin setting."</span><br><span class="small">Don't claim judges can chat with it in Gemini Enterprise today. If asked to show it: open the Gemini Enterprise console → Agents, where "Campus Time Ops · A2A (Custom) · Enabled" is listed.</span></div>
 
+<h2 class="pb">Gemini Enterprise, explained simply</h2>
+<p><b>What is Gemini Enterprise?</b> Google's AI assistant for companies and universities. Staff open one chat page, signed in with their work account, and talk to Gemini plus any <b>agents</b> their organisation has added. Think of it as an app store of AI helpers inside one company chat.</p>
+<p><b>What did we do?</b> We added <b>our own agent</b>, "Campus Time Ops", to the hackathon's Gemini Enterprise. So a timetabling officer could type, in Gemini Enterprise:</p>
+<p class="say" style="margin-left:12px">"Lecturer MZD is sick tomorrow, sort out the classes."</p>
+<p>and get back: <i>3 classes affected, ~513 students. 2 covered by substitute KCC at the same time. 1 moved to Mon 16 Nov 10:45 in D-07-15. Zero clashes. Review and approve in the Campus Time Ops app.</i> We tested exactly this live today (about 9 seconds).</p>
+<table>
+<tr><th style="width:30%">Step</th><th>What happens</th></tr>
+<tr><td>1. Staff ask</td><td>The question is typed in Gemini Enterprise.</td></tr>
+<tr><td>2. Gemini Enterprise passes it on</td><td>It sends the message to our agent over <b>A2A</b> ("agent-to-agent", Google's open standard for agents talking to each other).</td></tr>
+<tr><td>3. Our agent works it out</td><td>Gemini, on our server, uses our timetable tools: who is affected, who can substitute, which slot and room are free. The <b>OR-Tools solver</b> builds the clash-free plan.</td></tr>
+<tr><td>4. It answers with a draft</td><td>The plan comes back as a <b>draft</b>. Nothing changes yet.</td></tr>
+<tr><td>5. A person approves</td><td>Approval happens in our app. Only then are calendars and email drafts written.</td></tr>
+</table>
+<p><b>Why it matters:</b> staff don't need another app. They ask where they already work, and our agent does the timetable part safely.</p>
+<p><b>What's not done yet, honestly:</b> the hackathon's Google Cloud project has no <b>sign-in method</b> (identity provider) switched on, so <b>nobody can open the Gemini Enterprise chat page yet</b>, for any team. It's a single admin setting. Our agent is registered, enabled and answering; it's waiting at the door, not missing.</p>
+<p><b>Two ways in, same tools:</b> we built an <b>A2A agent</b> (registered) and an <b>MCP connector</b> (the same tools offered directly to Gemini Enterprise, protected by Google sign-in). MCP is the open standard that gives AI real tools; ours has 28.</p>
+
+<h2>Our tech stack</h2>
+<table class="stack">
+<tr><th>Layer</th><th>What we use</th></tr>
+<tr><td>Frontend</td><td><b>Next.js 16</b> + <b>React 19</b> in <b>TypeScript</b>; <b>Tailwind CSS 4</b>; <b>Motion</b> animations; <b>Three.js</b> (React Three Fiber) for the 3D campus; <b>Recharts</b> for charts.</td></tr>
+<tr><td>Backend</td><td><b>Python 3.12</b> + <b>FastAPI</b> on Uvicorn. Role checks (student / lecturer / office) enforced in the API.</td></tr>
+<tr><td>Planning</td><td><b>Google OR-Tools CP-SAT</b> solver, plus an independent clash checker after every plan.</td></tr>
+<tr><td>AI</td><td><b>Gemini API</b> (Gemini Flash-Lite) with about 20 read-only tools for open questions. Core actions use a fast rules path.</td></tr>
+<tr><td>Agent tools</td><td><b>MCP server</b> with 28 tools; <b>A2A</b> agent for Gemini Enterprise; <b>Google OAuth</b> check on the connector. Agent designs for Replan and Slot Finder, plus a Google <b>ADK</b> fallback.</td></tr>
+<tr><td>Data</td><td>APU's <b>public timetable feed</b>, saved as a dated, pseudonymised JSON snapshot (7,656 classes, 10–28 Nov), plus rooms, holidays 2026 and shuttle times. <b>3,005 synthetic students</b> for attendance.</td></tr>
+<tr><td>Database</td><td>Plans, approvals and the audit log in <b>JSON files</b> for the demo; <b>Google Cloud Firestore</b> built in as a one-setting switch.</td></tr>
+<tr><td>Actions</td><td>After approval: calendar events, <b>email drafts</b> and a change log. Demo writes standard files; <b>Google Workspace</b> mode (Calendar, Gmail drafts, Docs) is built.</td></tr>
+<tr><td>Hosting</td><td>Live site on <b>Render</b> (one <b>Docker</b> container); <b>Google Cloud Run</b> deploy target ready. Code on <b>GitHub</b>.</td></tr>
+<tr><td>Quality</td><td><b>65 automated tests</b> with <b>pytest</b> and <b>Hypothesis</b> property tests on the solver.</td></tr>
+</table>
+<div class="box"><b>One-line version:</b> <span class="say">"Next.js and React with Three.js on the front, a Python FastAPI backend with Google OR-Tools for planning, Gemini for language, and MCP and A2A so AI agents and Gemini Enterprise use the same tools, all on APU's real timetable data."</span></div>
+
 <h2>AI, Gemini and Gemini Enterprise</h2>
 <div class="qa hot"><b>Is the chat actually using Gemini?</b>For open questions, yes. That's the "Answered by Gemini" label, with read-only tools on the real timetable. Core actions (sick day, holiday, approve) use a fast rules path, so they're instant and give the same result every time. The planning itself is done by the OR-Tools solver, not by a language model.</div>
 <div class="qa hot"><b>Why not just ask Gemini or ChatGPT to re-plan the timetable?</b>A language model can't guarantee zero clashes across 600 classes and thousands of constraints. We use AI to understand people, and a real optimisation solver to plan. Then an independent clash checker verifies every plan.</div>
 <div class="qa hot"><b>Where does Gemini Enterprise fit? Is it live?</b>Our agent is registered in the hackathon's Gemini Enterprise app as an A2A agent and answers live. Staff could ask it inside Gemini Enterprise, "Lecturer MZD is sick tomorrow", and it drafts the plan with our tools. The chat isn't open to users yet because the project's Google sign-in isn't configured.</div>
+<div class="qa hot"><b>What's your tech stack?</b>Next.js and React with Three.js on the front, Python FastAPI on the back, Google OR-Tools for planning, Gemini for language, MCP and A2A for agents. Details on page 2.</div>
 <div class="qa"><b>What is A2A / MCP, in one sentence?</b>MCP is the open standard that gives AI agents real tools: ours has 28. A2A is the standard that lets one agent platform, here Gemini Enterprise, talk to another agent, ours.</div>
 <div class="qa hot"><b>Why can't Gemini change the timetable?</b>On purpose. Gemini only gets tools to look things up and to create a <i>draft</i>. Any change goes through a plan that a person approves. The API refuses to execute anything that isn't approved.</div>
 <div class="qa"><b>What if Gemini makes something up?</b>It answers from tool results on the live timetable, not from memory. Every plan comes from the solver and shows the rule behind each decision. If Gemini is down, the core features still work.</div>
