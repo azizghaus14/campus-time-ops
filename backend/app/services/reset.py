@@ -9,9 +9,16 @@ from ..data.loader import get_dataset, reset_dataset
 from . import holidays
 from .store import get_store
 
+import uuid
+
+# changes on every reset (and on restart): the dashboard drops chat history saved before it
+EPOCH = uuid.uuid4().hex[:12]
+
 
 def reset_demo() -> dict:
     t0 = time.perf_counter()
+    global EPOCH
+    EPOCH = uuid.uuid4().hex[:12]
     get_store().clear()
     holidays.invalidate()
     if settings.outbox_dir.exists():

@@ -56,6 +56,28 @@ function Assistant({ session }: { session: Session }) {
     document.querySelector(`[data-msg="${lastUser}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [lastUser]);
 
+  // keep the conversation when moving between pages (per browser tab, per persona); a demo reset starts it fresh
+  const storeKey = `cto_chat:${session.role}:${session.user}`;
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || !health?.epoch) return;
+    restored.current = true;
+    try {
+      const s = JSON.parse(sessionStorage.getItem(storeKey) || "null");
+      if (s?.epoch === health.epoch && Array.isArray(s.msgs) && s.msgs.length) {
+        idRef.current = Math.max(...s.msgs.map((m: Msg) => m.id)) + 1;
+        setMsgs((m) => (m.length ? m : s.msgs));
+        setCtx((c: any) => (Object.keys(c).length ? c : s.ctx || {}));
+      } else sessionStorage.removeItem(storeKey);
+    } catch {}
+  }, [health?.epoch, storeKey]);
+  useEffect(() => {
+    if (!restored.current || !health?.epoch) return;
+    try {
+      sessionStorage.setItem(storeKey, JSON.stringify({ epoch: health.epoch, msgs: msgs.filter((m) => !m.pending), ctx }));
+    } catch {}
+  }, [msgs, ctx, health?.epoch, storeKey]);
+
   const send: CardAction = async (text, opts) => {
     const t = text.trim();
     if (!t || busy) return;

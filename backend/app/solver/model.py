@@ -437,13 +437,20 @@ def check_no_clashes(ds: Dataset, moves: dict[str, Cand], substitutes: Optional[
     for sid, c in sorted(moves.items(), key=lambda kv: (kv[1].day, kv[1].start, kv[0])):
         s = ds.sessions[sid]
         L = substitutes.get(sid) or substitutes.get("*") or s.lecturer_id
+        # a session kept at its exact original slot (substitute) can't create a room/group clash: any overlap with an
+        # unmoved session was already in APU's feed (e.g. electives sharing one group code), so it isn't ours
+        same_slot = c.day == s.date and c.start == s.start_min and c.end == s.end_min
         if c.room != "ONLINE":
             for o in room.conflicts(c.room, c.day, c.start, c.end):
+                if same_slot and c.room == s.room and o not in moving:
+                    continue
                 problems.append({"type": "room", "session": sid, "with": o, "room": c.room})
         for o in lect.conflicts(L, c.day, c.start, c.end):
             problems.append({"type": "lecturer", "session": sid, "with": o, "lecturer": L})
         for g in s.groups:
             for o in grp.conflicts(g, c.day, c.start, c.end):
+                if same_slot and o not in moving:
+                    continue
                 problems.append({"type": "group", "session": sid, "with": o, "group": list(g)})
         if c.room != "ONLINE":
             room.add(c.room, c.day, c.start, c.end, sid)

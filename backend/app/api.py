@@ -68,11 +68,14 @@ class SlotProposalIn(BaseModel):
 
 
 # ------------------------------------------------------------- meta
+from .services import reset as _reset  # noqa: E402
+
+
 @router.get("/health")
 def health():
     ds = get_dataset()
     return {"ok": True, "sessions": len(ds.sessions), "data_mode": ds.meta.get("mode"), "store": settings.store_backend,
-            "workspace": settings.workspace_mode, "now": settings.now().isoformat()}
+            "workspace": settings.workspace_mode, "now": settings.now().isoformat(), "epoch": _reset.EPOCH}
 
 
 @router.get("/overview")

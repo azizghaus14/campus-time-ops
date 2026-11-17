@@ -35,9 +35,10 @@ def _validate(p: dict):
         if not room.online:
             # capacity respected
             assert room.capacity >= ds.session_students(s)
-            # shuttle rule
-            latest = latest_end_for_physical(d)
-            assert latest is not None and to_end.hour * 60 + to_end.minute <= latest
+            # shuttle rule: applies to classes we move, not to a class kept at its original time (substitute / room swap)
+            if m["change"] not in ("room-only", "lecturer-only"):
+                latest = latest_end_for_physical(d)
+                assert latest is not None and to_end.hour * 60 + to_end.minute <= latest
         # notice period unless the time is unchanged (room swap / substitute lecturer)
         if m["change"] not in ("room-only", "lecturer-only"):
             assert to_start >= datetime(2026, 11, 13, 9, 0, tzinfo=MYT)
