@@ -41,6 +41,8 @@ def _affected(ds: Dataset, dtype: DisruptionType, scope: dict, ws: datetime, we:
     out = []
     if dtype == DisruptionType.LECTURER_UNAVAILABLE:
         ids = ds.by_lecturer.get(scope["lecturer_id"], [])
+        if scope.get("session_ids"):
+            ids = [i for i in ids if i in set(scope["session_ids"])]
     elif dtype == DisruptionType.ROOM_UNAVAILABLE:
         ids = [i for r in scope["rooms"] for i in ds.by_room.get(r, [])]
     else:
@@ -85,7 +87,12 @@ def create_disruption(type: str, scope: dict, window: Optional[dict] = None, rea
             from .timetable import _lect_suggest
 
             raise NotFound("UNKNOWN_LECTURER", f"No lecturer '{lid}'", suggestions=_lect_suggest(ds, lid))
+        only = [str(x) for x in (scope.get("session_ids") or [])]
+        bad = [x for x in only if x not in ds.sessions or ds.sessions[x].lecturer_id != lid]
+        require(not bad, "BAD_SCOPE", f"Not {lid}'s class(es): {bad}")
         scope = {"lecturer_id": lid, "lecturer_name": ds.lecturer_names[lid]}
+        if only:
+            scope["session_ids"] = only  # move just these classes, not everything in the window
     elif dtype == DisruptionType.ROOM_UNAVAILABLE:
         rooms = scope.get("rooms") or ([scope["room"]] if scope.get("room") else [])
         require(rooms, "MISSING_SCOPE", "scope.rooms is required")
@@ -326,6 +333,9 @@ def plan_replan(disruption_id: str, options: Optional[dict] = None, created_by: 
 def _title(dis: dict) -> str:
     sc = dis["scope"]
     if dis["type"] == "LECTURER_UNAVAILABLE":
+        if sc.get("session_ids"):
+            n = len(sc["session_ids"])
+            return f"{sc['lecturer_name']} ({sc['lecturer_id']}): {n} class{'es' if n > 1 else ''} moved on request"
         return f"{sc['lecturer_name']} ({sc['lecturer_id']}) unavailable"
     if dis["type"] == "ROOM_UNAVAILABLE":
         return f"Room{'s' if len(sc['rooms']) > 1 else ''} {', '.join(sc['rooms'])} unavailable"

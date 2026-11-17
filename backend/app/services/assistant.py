@@ -161,6 +161,67 @@ def _sched_card(title: str, sessions: list[dict]) -> dict:
 
 
 # ------------------------------------------------------------------ handlers
+def _move_one_class(who: Identity, text: str, low: str, day: Optional[date]) -> Optional[dict]:
+    ds = get_dataset()
+    lects = find_lecturers(text)
+    lid = who.user if who.role == "lecturer" else (lects[0] if lects else None)
+    if not lid:
+        return {"reply": "Whose class should I move? Give me the lecturer ID (for example MZD) and the class.", "cards": []}
+    can_create_disruption(who, "LECTURER_UNAVAILABLE", {"lecturer_id": lid})
+    now = settings.now()
+    up = [ds.sessions[i] for i in ds.by_lecturer.get(lid, [])]
+    up = sorted((s for s in up if datetime(s.date.year, s.date.month, s.date.day, s.start_min // 60, s.start_min % 60, tzinfo=MYT) >= now
+                 and s.date <= (now + timedelta(days=21)).date()), key=lambda s: (s.date, s.start_min))
+    # the class's own day: a weekday name ("on Friday") or today/tomorrow; "to another day" is the target, not the class
+    wd = next((i for i, w in enumerate(WEEKDAYS) if re.search(rf"\b(on|this|next)?\s*{w}\b", low)), None)
+    if wd is not None:
+        day = now.date() + timedelta(days=(wd - now.date().weekday()) % 7)
+    elif re.search(r"\btomorrow\b", low):
+        day = now.date() + timedelta(days=1)
+    elif re.search(r"\btoday\b", low):
+        day = now.date()
+    else:
+        day = None
+    cand = [s for s in up if day is None or s.date == day]
+    t = parse_time(text)
+    if t is not None:
+        cand = [s for s in cand if s.start_min == t] or cand
+    words = lambda s: {w for w in re.findall(r"[a-z]{3,}", (s.module_name or "").lower()) if w not in {"and", "the", "for"}}
+    scored = [(len(words(s) & set(re.findall(r"[a-z]{3,}", low))), s) for s in cand]
+    best = max((n for n, _ in scored), default=0)
+    if best:
+        cand = [s for n, s in scored if n == best]
+    view = lambda xs: [{"id": s.id, "date": s.date.isoformat(), "day": s.date.strftime("%a %d %b"), "time": f"{hhmm(s.start_min)}-{hhmm(s.end_min)}",
+                        "start": s.start_min, "end": s.end_min, "module_name": s.module_name, "room": s.room, "lecturer_id": s.lecturer_id,
+                        "n_groups": len(s.groups), "students": ds.session_students(s)} for s in xs]
+    if not cand:
+        return {"reply": f"I couldn't find that class among {lid}'s upcoming classes. Here they are; tell me which one to move.",
+                "cards": [_sched_card(f"{lid} · upcoming", view(up[:12]))]}
+    if not best and day is None and t is None:
+        return {"reply": f"I couldn't tell which of {lid}'s classes you mean. Here are the upcoming ones; tell me the module and day.",
+                "cards": [_sched_card(f"{lid} · upcoming", view(up[:12]))]}
+    if len(cand) > 1:
+        return {"reply": "Which class should I move? Tell me the module and day (and time if there are two).",
+                "cards": [_sched_card(f"{lid} · matching classes", view(cand[:12]))]}
+    s = cand[0]
+    st = datetime(s.date.year, s.date.month, s.date.day, s.start_min // 60, s.start_min % 60, tzinfo=MYT)
+    en = datetime(s.date.year, s.date.month, s.date.day, s.end_min // 60, s.end_min % 60, tzinfo=MYT)
+    d = replan.create_disruption("LECTURER_UNAVAILABLE", {"lecturer_id": lid, "session_ids": [s.id]},
+                                 {"start": st.isoformat(), "end": en.isoformat()}, text, who.label)
+    p = replan.plan_replan(d["id"], {"use_substitutes": False}, created_by=who.label)
+    what = f"**{s.module_name}** ({s.date:%a %d %b} {hhmm(s.start_min)}–{hhmm(s.end_min)}, {s.room})"
+    mv = (p.get("moves") or [None])[0]
+    if mv:
+        to = datetime.fromisoformat(mv["to"]["start"])
+        new = f"**{to:%a %d %b} {to:%H:%M}** in **{mv['to'].get('room')}**"
+        reply = (f"I'll move only {what}; your other classes stay as they are. Best clash-free slot: {new}, with every student group and you free. "
+                 f"Clash check passed in {p['stats']['total_s']}s. **Nothing has changed yet**: approve it, or tell me what to adjust "
+                 "(e.g. \"move it to the afternoon\").")
+    else:
+        reply = f"I couldn't find a clash-free slot for {what} in the next two weeks. The plan marks it as needing a decision."
+    return {"reply": reply, "cards": [_proposal_card(p, who)], "context": {"proposal_id": p["id"], "disruption_id": d["id"]}}
+
+
 def _plan_lecturer(who: Identity, lid: str, a: date, b: date, reason: str) -> tuple[str, list[dict], dict]:
     d = replan.create_disruption("LECTURER_UNAVAILABLE", {"lecturer_id": lid}, {"start": a.isoformat(), "end": b.isoformat()}, reason, who.label)
     when = a.strftime("%a %d %b") + ("" if a == b else f" – {b.strftime('%a %d %b')}")
@@ -253,6 +314,11 @@ def handle(message: str, who: Identity, ctx: Optional[dict] = None) -> dict:
                     "cards": [_proposal_card(p2, who)], "context": {"proposal_id": p2["id"], "disruption_id": p2["disruption_id"]}}
 
         a, b = parse_dates(text)
+        # ---------------- move ONE specific class (the lecturer still teaches; no substitute, just a new clash-free slot)
+        if re.search(r"\b(move|reschedule|shift|postpone)\b", low) and who.role in ("lecturer", "admin", "agent"):
+            r = _move_one_class(who, text, low, a)
+            if r:
+                return {**r, "context": r.get("context", ctx)}
         # ---------------- holiday
         if re.search(r"\b(public holiday|holiday|campus (is )?closed|no classes)\b", low) and not re.search(r"\b(sick|ill|unwell)\b", low):
             if not a:
@@ -425,7 +491,7 @@ def suggestions(who: Identity) -> list[str]:
         extra = ["Who is my lecturer for my next lesson, and which room is it in?"] if gemini.enabled() else []
         return ["How many more classes can I miss?", "What do I have tomorrow?", "What's my timetable this week?"] + extra
     if who.role == "lecturer":
-        return ["I'm sick tomorrow, sort out my classes", "What do I have this week?",
+        return ["I'm sick tomorrow, sort out my classes", "Move my Web Design & Development class on Friday to another day", "What do I have this week?",
                 "Find a 45 minute slot next week for 6 vivas with CMM, MSB and RJR", "Which rooms are free at 3pm?"]
     return ["Lecturer MZD is sick tomorrow", "Room B-04-03 is flooded until Friday", "Monday 16 Nov is now a public holiday",
             "Which labs are free at 2pm tomorrow?"]
