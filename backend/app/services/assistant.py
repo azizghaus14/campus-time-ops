@@ -323,6 +323,25 @@ def handle(message: str, who: Identity, ctx: Optional[dict] = None) -> dict:
                 raise ToolError("ROLE_FORBIDDEN", "You can only see your own attendance.")
             if not sid:
                 return {"reply": "Which student? Give me their ID (e.g. STU-DEMO-01).", "cards": [], "context": ctx}
+            # past tense ("how many did I miss", "my absences") -> what already happened, not the forecast
+            past = re.search(r"\b(missed|skipped|absences|absent|did i (miss|skip)|have i (miss|skip)\w*|so far|already)\b", low)
+            future = re.search(r"\b(can i|could i|may i|more|left|allowed|still|afford)\b", low)
+            if past and not future:
+                g = attendance.get_attendance(sid)
+                missed = [r for r in g["records"] if r["status"] == "ABSENT"]
+                n, held = len(missed), g["sessions_so_far"]
+                per = ", ".join(f"{m['module']} **{m['held'] - m['attended']}**" for m in g["by_module"] if m["held"] > m["attended"])
+                last = missed[-1] if missed else None
+                last_txt = (f" Your last missed class was **{last['module']}** on "
+                            f"{datetime.fromisoformat(last['date']):%a %d %b} at {last['time'][:5]}.") if last else ""
+                you = "You've" if who.role == "student" else f"{g['name']} has"
+                reply = (f"{you} missed **{n}** of **{held}** classes so far this term, and attended {g['attended']} "
+                         f"(**{g['percent']}%**)." + (f" By module: {per}." if per else " No absences at all.") + last_txt)
+                f = attendance.attendance_forecast(sid)
+                return {"reply": reply, "cards": [{"type": "attendance", **{k: f[k] for k in (
+                    "student_id", "name", "intake", "grouping", "current_percent", "remaining_sessions", "max_more_absences", "binding_module",
+                    "projected_percent_end", "threshold", "trend", "next_class")}, "per_module": f["per_module"],
+                    "weekly": [w["cumulative_percent"] for w in f["weekly"]]}], "context": ctx}
             f = attendance.attendance_forecast(sid)
             return {"reply": f["message"], "cards": [{"type": "attendance", **{k: f[k] for k in (
                 "student_id", "name", "intake", "grouping", "current_percent", "remaining_sessions", "max_more_absences", "binding_module",
