@@ -183,12 +183,34 @@ def _plan_lecturer(who: Identity, lid: str, a: date, b: date, reason: str) -> tu
     return reply, [_impact_card(d), _proposal_card(p, who)], {"proposal_id": p["id"], "disruption_id": d["id"]}
 
 
+_STUDENT_SIMPLE = (
+    r"^how many (more )?(classes |lessons |sessions )?(can|could) i (still )?(miss|skip)\b",
+    r"^can i (still )?(miss|skip)( (a|one|another) (class|lesson))?\??$",
+    r"^what do i have (today|tomorrow|this week|next week)\??$",
+    r"^what('s| is) (on )?my (timetable|schedule) (today|tomorrow|this week|next week)\??$",
+    r"^(show )?my (timetable|schedule)( (today|tomorrow|this week|next week))?\??$",
+    r"^(what('s| is) )?my attendance\??$",
+)
+
+
+def _student_simple(low: str) -> bool:
+    q = re.sub(r"\s+", " ", low.strip().rstrip("!. "))
+    return any(re.search(p, q) for p in _STUDENT_SIMPLE)
+
+
 def handle(message: str, who: Identity, ctx: Optional[dict] = None) -> dict:
     ctx = dict(ctx or {})
     text = message.strip()
     low = text.lower()
     ds = get_dataset()
     try:
+        # ---------------- students: only the fixed one-tap questions use the instant rules; any other wording goes to
+        # Gemini (read-only tools), so "how many did I miss", "who teaches X", "when is my next lab" etc. get a real answer.
+        # If Gemini is off or fails, the rules below still answer.
+        if who.role == "student" and not _student_simple(low):
+            g = gemini.answer(text, who)
+            if g:
+                return {**g, "context": ctx}
         # ---------------- approvals / edits on the current proposal
         pid = ctx.get("proposal_id")
         if pid and re.search(r"^(yes|yep|ok(ay)?|approve|approved|go ahead|do it|confirm|looks good|sounds good)\b", low):

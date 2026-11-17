@@ -86,6 +86,8 @@ def _tools(who: Identity, planning: bool = False) -> dict[str, tuple[dict, Calla
             lambda start_date, end_date: timetable.get_group_schedule(rec["intake"], rec["grouping"], start_date, end_date))
         add("my_attendance", "The signed-in student's attendance: current %, per-module %, remaining classes and how many more "
             "they can miss per module before dropping below the threshold.", {}, (), lambda: _forecast(who.user))
+        add("my_absences", "The signed-in student's attendance history so far: classes held, attended and missed (overall and per "
+            "module), and the list of every missed class with module, date and time.", {}, (), lambda: _absences(who.user))
         return t
 
     add("get_lecturer_schedule", "Classes taught by a lecturer between two dates, inclusive.", {"lecturer_id": (S, "e.g. MZD"), "start_date": DATE, "end_date": DATE},
@@ -162,6 +164,13 @@ def _csv(s: Any) -> list[str]:
     if isinstance(s, list):
         return [str(x).strip() for x in s if str(x).strip()]
     return [x.strip() for x in str(s or "").split(",") if x.strip()]
+
+
+def _absences(sid: str) -> dict:
+    g = attendance.get_attendance(sid)
+    missed = [{k: r[k] for k in ("module", "date", "time")} for r in g["records"] if r["status"] == "ABSENT"]
+    return {"held_so_far": g["sessions_so_far"], "attended": g["attended"], "missed": len(missed), "percent": g["percent"],
+            "by_module": [{**m, "missed": m["held"] - m["attended"]} for m in g["by_module"]], "missed_classes": missed}
 
 
 def _forecast(sid: str) -> dict:
