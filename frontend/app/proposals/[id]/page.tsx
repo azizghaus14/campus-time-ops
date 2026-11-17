@@ -195,7 +195,7 @@ export default function ProposalPage() {
                 </div>
                 <div className="text-[11px] muted">Workspace mode: <b>{ex.mode}</b></div>
                 {ex.calendar?.bundle_url && <a className="flex items-center gap-2 text-[var(--accent)] text-xs" href={ex.calendar.bundle_url} target="_blank"><CalendarCheck className="h-3.5 w-3.5" /> All calendar events (.ics)</a>}
-                {ex.drafts?.index_url && <a className="flex items-center gap-2 text-[var(--accent)] text-xs" href={`/drafts/${p.id}`} target="_blank"><Mail className="h-3.5 w-3.5" /> Gmail drafts index</a>}
+                {ex.drafts?.index_url && <a className="flex items-center gap-2 text-[var(--accent)] text-xs" href={`/drafts/${p.id}`}><Mail className="h-3.5 w-3.5" /> Gmail drafts index</a>}
                 {ex.changelog?.doc_url && <a className="flex items-center gap-2 text-[var(--accent)] text-xs" href={ex.changelog.doc_url} target="_blank"><FileText className="h-3.5 w-3.5" /> Timetable Change Log</a>}
                 <details className="text-xs"><summary className="cursor-pointer muted">Drafts ({ex.drafts?.count})</summary>
                   <ul className="mt-1 space-y-1">{ex.drafts?.drafts?.map((d: any) => <li key={d.id}><a className="text-[var(--accent)]" href={d.url} target="_blank">{d.subject}</a> <span className="muted">→ {d.to.join(", ")}</span></li>)}</ul>

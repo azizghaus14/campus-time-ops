@@ -218,6 +218,20 @@ def plan(disruption_id: str, body: PlanIn = Body(default=PlanIn()), x_demo_role:
     return replan.plan_replan(disruption_id, body.options, created_by=w.label if w.role != "agent" else "dashboard")
 
 
+@router.get("/outbox/{proposal_id}/sent")
+def sent_drafts(proposal_id: str):
+    from .services import send as _send
+    return _send.list_sent(proposal_id)
+
+
+@router.post("/outbox/{proposal_id}/drafts/{file}/send")
+def send_one(proposal_id: str, file: str, x_demo_role: Optional[str] = Header(None), x_demo_user: Optional[str] = Header(None)):
+    from .services import send as _send
+    w = who(x_demo_role, x_demo_user)
+    _check_approve(w, proposal_id)  # the same people who may approve the plan may send its emails
+    return _send.send_draft(proposal_id, file, w)
+
+
 @router.get("/proposals")
 def list_props(status: Optional[str] = None, kind: Optional[str] = None):
     return {"proposals": proposals.list_proposals(status, kind)}

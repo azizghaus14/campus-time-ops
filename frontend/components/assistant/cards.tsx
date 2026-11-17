@@ -186,7 +186,7 @@ export function ExecutedCard({ c }: { c: any }) {
         </div>
         <div className="grid grid-cols-3 gap-2 mt-4">
           {tiles.map((t) => (
-            <a key={t.l} href={t.href || "#"} target="_blank" className="rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] p-3 transition">
+            <a key={t.l} href={t.href || "#"} target={t.href?.startsWith("/drafts/") ? undefined : "_blank"} className="rounded-2xl bg-white/[0.04] hover:bg-white/[0.07] p-3 transition">
               <t.icon className="h-4 w-4 text-[var(--green)]" />
               <div className="text-[22px] font-semibold tabular-nums mt-1.5">{t.n}</div>
               <div className="faint text-[11px]">{t.l}</div>
@@ -195,7 +195,7 @@ export function ExecutedCard({ c }: { c: any }) {
         </div>
         {c.drafts?.length > 0 && (
           <div className="mt-3 space-y-1">{c.drafts.slice(0, 4).map((d: any, k: number) => (
-            <a key={k} href={c.proposal_id ? `/drafts/${c.proposal_id}?i=${k}` : d.url} target="_blank" className="flex items-center gap-2 text-[12px] muted hover:text-white"><Mail className="h-3 w-3" /><span className="truncate">{d.subject}</span><span className="faint truncate">→ {d.to.join(", ")}</span></a>
+            <a key={k} href={c.proposal_id ? `/drafts/${c.proposal_id}?i=${k}` : d.url} target={c.proposal_id ? undefined : "_blank"} className="flex items-center gap-2 text-[12px] muted hover:text-white"><Mail className="h-3 w-3" /><span className="truncate">{d.subject}</span><span className="faint truncate">→ {d.to.join(", ")}</span></a>
           ))}</div>
         )}
       </div>

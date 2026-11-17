@@ -1,6 +1,6 @@
 "use client";
 import {
-  Activity, Box, CalendarDays, CalendarSearch, ClipboardCheck, DoorOpen, LogOut, ShieldCheck, Sparkles, UserRoundCheck, Zap,
+  Activity, Box, CalendarDays, CalendarSearch, ClipboardCheck, DoorOpen, LogOut, Mail, ShieldCheck, Sparkles, UserRoundCheck, Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -18,6 +18,7 @@ export const NAV: Record<Role, Item[]> = {
     { href: "/campus", label: "Campus", icon: Box },
     { href: "/disruptions", label: "Live board", icon: Zap },
     { href: "/proposals", label: "Approvals", icon: ClipboardCheck },
+    { href: "/drafts", label: "Email drafts", icon: Mail },
     { href: "/slots", label: "Slot Finder", icon: CalendarSearch },
     { href: "/rooms", label: "Rooms", icon: DoorOpen },
     { href: "/health", label: "Health", icon: Activity },
@@ -28,6 +29,7 @@ export const NAV: Record<Role, Item[]> = {
     { href: "/", label: "Assistant", icon: Sparkles },
     { href: "/week", label: "My week", icon: CalendarDays },
     { href: "/proposals", label: "My requests", icon: ClipboardCheck },
+    { href: "/drafts", label: "Email drafts", icon: Mail },
     { href: "/slots", label: "Slot Finder", icon: CalendarSearch },
     { href: "/campus", label: "Campus", icon: Box },
   ],

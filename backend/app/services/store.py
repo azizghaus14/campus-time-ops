@@ -13,7 +13,7 @@ from typing import Any, Optional, Protocol
 
 from ..config import settings
 
-COLLECTIONS = ("disruptions", "proposals", "audit", "runtime_holidays", "counters")
+COLLECTIONS = ("disruptions", "proposals", "audit", "runtime_holidays", "counters", "sent")
 
 
 class Store(Protocol):
