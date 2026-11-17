@@ -186,6 +186,13 @@ function Assistant({ session }: { session: Session }) {
           </div>
           <div className="absolute inset-x-0 bottom-6 px-4 pointer-events-auto">
             <div className="max-w-[820px] mx-auto">
+              {/* suggestions stay one tap away during a conversation */}
+              <div className="flex flex-wrap justify-center gap-2 mb-2.5">
+                {(sug?.suggestions || []).map((s: string) => (
+                  <button key={s} onClick={() => send(s)} disabled={busy}
+                    className="shrink-0 rounded-full border border-white/10 bg-[rgba(14,14,22,0.88)] backdrop-blur px-3 py-1 text-[12.5px] text-white/80 hover:bg-white/[0.1] hover:text-white transition disabled:opacity-50">{s}</button>
+                ))}
+              </div>
               {composer}
               <div className="flex justify-between mt-2 px-2 text-[11px] faint">
                 <span>Plans are drafts until approved · {session.role === "student" ? "read-only" : "Calendar · Gmail drafts · change log"}</span>
