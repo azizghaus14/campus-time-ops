@@ -1,0 +1,363 @@
+<title>Final Pitch Run Sheet</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one reading column; each pitch part is a block; demo parts are two-lane cue tables (Speaker | Demo) that stack on phones. */
+:root{
+  --bg:#f6f6fa; --surface:#ffffff; --fg:#17161f; --muted:#5b5a6b; --line:#e2e1ea;
+  --say:#4b3fd9; --say-bg:#efedff; --do:#b34a00; --do-bg:#fff1e6; --wait:#0d7a5f; --wait-bg:#e6f6f0;
+  --warn:#a32a2a; --warn-bg:#fdecec;
+  --display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif; --body:"Inter",ui-sans-serif,system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f0e15; --surface:#18171f; --fg:#ecebf3; --muted:#a3a1b5; --line:#2b2a36;
+  --say:#a99fff; --say-bg:#221f3d; --do:#ffa463; --do-bg:#33220f; --wait:#5fd3ae; --wait-bg:#10291f;
+  --warn:#ff8f8f; --warn-bg:#331616; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f0e15; --surface:#18171f; --fg:#ecebf3; --muted:#a3a1b5; --line:#2b2a36;
+  --say:#a99fff; --say-bg:#221f3d; --do:#ffa463; --do-bg:#33220f; --wait:#5fd3ae; --wait-bg:#10291f;
+  --warn:#ff8f8f; --warn-bg:#331616; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 var(--body);margin:0}
+.wrap{max-width:900px;margin:0 auto;padding-block:40px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:2.1rem}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem}
+p{margin:0}
+.muted{color:var(--muted)}
+.eyebrow{font:600 .75rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+header{display:flex;flex-direction:column;gap:10px}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+.tag{display:inline-flex;align-items:center;gap:6px;font:600 .78rem/1 var(--body);letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border-radius:999px}
+.t-say{color:var(--say);background:var(--say-bg)}
+.t-do{color:var(--do);background:var(--do-bg)}
+.t-wait{color:var(--wait);background:var(--wait-bg)}
+.t-warn{color:var(--warn);background:var(--warn-bg)}
+
+/* timeline */
+.timeline{display:flex;gap:3px;height:38px;border-radius:10px;overflow:hidden}
+.timeline a{display:flex;align-items:center;justify-content:center;min-width:0;font:600 .7rem/1 var(--body);color:var(--fg);text-decoration:none;background:var(--surface);border:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 4px}
+.timeline a.demo{background:var(--do-bg);color:var(--do);border-color:transparent}
+.tl-key{display:flex;justify-content:space-between;font:500 .75rem/1 var(--body);color:var(--muted);font-variant-numeric:tabular-nums}
+
+.box{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.box.warn{background:var(--warn-bg);border-color:transparent}
+ul.check{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+ul.check li{display:flex;gap:10px;align-items:flex-start}
+ul.check input{margin-top:5px;width:18px;height:18px;accent-color:var(--do);flex:none}
+ul.plain{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+code{font:500 .88em/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--bg);border:1px solid var(--line);padding:2px 6px;border-radius:6px}
+
+/* parts */
+section.part{display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
+.part-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;border-bottom:2px solid var(--fg);padding-bottom:8px}
+.time{font:700 .95rem/1 var(--display);font-variant-numeric:tabular-nums;color:var(--muted)}
+.screen{margin-left:auto;font:600 .8rem/1.3 var(--body);color:var(--muted)}
+.say{background:var(--say-bg);border-left:4px solid var(--say);border-radius:0 12px 12px 0;padding:14px 18px;font-size:1.06rem;line-height:1.65;display:flex;flex-direction:column;gap:10px}
+.say b{color:var(--say)}
+.do{background:var(--do-bg);border-left:4px solid var(--do);border-radius:0 12px 12px 0;padding:12px 18px;display:flex;flex-direction:column;gap:6px}
+.do b{color:var(--do)}
+.note{font-size:.9rem;color:var(--muted)}
+
+/* cue table */
+.cues{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--surface)}
+.cue{display:grid;grid-template-columns:44px 1fr 1fr;border-top:1px solid var(--line)}
+.cue:first-child{border-top:none}
+.cue.head{background:var(--bg);font:600 .75rem/1 var(--body);letter-spacing:.06em;text-transform:uppercase}
+.cue.head>div{padding:10px 14px}
+.cue .n{padding:14px 0 14px 14px;font:700 .9rem/1.6 var(--display);color:var(--muted);font-variant-numeric:tabular-nums}
+.cue .s,.cue .d{padding:14px;min-width:0;display:block}
+.cue .w,.cue .d .note{display:block;margin-top:6px}
+.cue .s{font-size:1.02rem}
+.cue .s b{color:var(--say)}
+.cue .d{background:var(--do-bg)}
+.cue .d b{color:var(--do)}
+.cue .w{color:var(--wait);font-weight:600;font-size:.9rem}
+.head .s-h{color:var(--say)} .head .d-h{color:var(--do);background:var(--do-bg)}
+.mobile-label{display:none}
+
+table.qa{width:100%;border-collapse:collapse}
+table.qa td{padding:12px 0;border-top:1px solid var(--line);vertical-align:top}
+table.qa tr:first-child td{border-top:none}
+table.qa td:first-child{font-weight:600;width:38%;padding-right:16px}
+.ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+@media (max-width:640px){
+  h1{font-size:1.7rem}
+  .timeline a{font-size:0}
+  .cue{grid-template-columns:1fr}
+  .cue.head{display:none}
+  .cue .n{padding:12px 14px 0}
+  .mobile-label{display:block;margin-bottom:6px;font:600 .7rem/1 var(--body);letter-spacing:.08em;text-transform:uppercase}
+  .cue .s .mobile-label{color:var(--say)} .cue .d .mobile-label{color:var(--do)}
+  table.qa td{display:block;width:auto!important;padding:4px 0}
+  table.qa tr td:first-child{padding-top:14px}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+a{color:var(--say)}
+input:focus-visible,a:focus-visible{outline:2px solid var(--say);outline-offset:2px}
+</style>
+
+<div class="wrap">
+
+<header>
+  <span class="eyebrow">Campus Time Ops · Team Terminal · APU Cloud Innovation Hackathon 2026 · Top 5 final</span>
+  <h1>Final pitch run sheet (7 minutes)</h1>
+  <p class="muted">Two people: the <b>Speaker</b> talks and never touches the laptop. The <b>Demo operator</b> controls the slides and the app and never talks. Every switch has a cue.</p>
+  <div class="legend">
+    <span class="tag t-say">Speaker says</span>
+    <span class="tag t-do">Demo operator does</span>
+    <span class="tag t-wait">Wait for this on screen</span>
+  </div>
+</header>
+
+<div style="display:flex;flex-direction:column;gap:6px">
+  <nav class="timeline" aria-label="Pitch timeline">
+    <a href="#p1" style="flex:40">Hook</a>
+    <a href="#p2" style="flex:40">Problem</a>
+    <a href="#p3" style="flex:15">Solution</a>
+    <a href="#p4" class="demo" style="flex:75">Lecturer demo</a>
+    <a href="#p5" class="demo" style="flex:65">Office demo</a>
+    <a href="#p6" class="demo" style="flex:40">Student demo</a>
+    <a href="#p7" style="flex:40">How it works</a>
+    <a href="#p8" style="flex:30">Trust</a>
+    <a href="#p9" style="flex:30">Proof</a>
+    <a href="#p10" style="flex:45">Close</a>
+  </nav>
+  <div class="tl-key"><span>0:00</span><span>1:35 demo starts</span><span>4:35 back to slides</span><span>7:00</span></div>
+</div>
+
+<div class="box">
+  <h2>Before you go on stage (operator)</h2>
+  <ul class="check">
+    <li><input type="checkbox" id="c1"><label for="c1">Laptop on charger. Do Not Disturb on. Notifications, Slack and WhatsApp closed.</label></li>
+    <li><input type="checkbox" id="c2"><label for="c2">Start the app locally: <code>make dev</code>. Local is much faster than the website (the holiday re-plan takes about 2.5 s instead of about 16 s).</label></li>
+    <li><input type="checkbox" id="c2b"><label for="c2b"><b>Gemini check:</b> <code>GEMINI_API_KEY</code> is in <code>.env</code> and the app was restarted. Sign in as the student and confirm a 4th suggestion appears: <b>"Who is my lecturer for my next lesson…"</b>. Click it once: the answer must show the <b>"Answered by Gemini"</b> label. No label or no 4th suggestion means Gemini is off, so skip Demo 3 row 4.</label></li>
+    <li><input type="checkbox" id="c3"><label for="c3">Right before the pitch, run <code>make reset-demo</code> so every demo starts clean.</label></li>
+    <li><input type="checkbox" id="c4"><label for="c4"><b>One Chrome window, four tabs</b>, each signed in separately (different addresses keep separate logins):<br><b>Tab 1</b> <code>localhost:3000</code> → Lecturer → <b>Assoc. Prof. Lecturer MZD</b><br><b>Tab 2</b> <code>127.0.0.1:3000</code> → <b>Timetabling Office</b><br><b>Tab 3</b> <code>student.localhost:3000</code> → Student → <b>Amani Kestrel</b><br><b>Tab 4</b> <code>campus-time-ops.onrender.com</code> → backup site (sign in as <b>Timetabling Office</b>)<br>Leave tabs 1–3 on the Assistant home.<br><span class="note">Switch with <b>⌘1 / ⌘2 / ⌘3</b>. Never type a new address into a tab, never open a second tab on one of these addresses, never click "Switch persona" during the pitch.</span></label></li>
+    <li><input type="checkbox" id="c7"><label for="c7">In tab 2, open <b>Campus</b> once and go back, so the 3D map has loaded before the pitch.</label></li>
+    <li><input type="checkbox" id="c8"><label for="c8">Zoom each tab to about 110% so the room can read it. Chrome full screen (⌃⌘F).</label></li>
+    <li><input type="checkbox" id="c9"><label for="c9">Slides <b>Campus_Time_Ops_Final_Slides.pdf</b> open in Preview on slide 1, full screen (⌘⇧F). Practise switching: slides → Chrome (⌘Tab) → ⌘1 → ⌘2 → ⌘3 → slides (⌘Tab).<br><span class="note">Slides 1–9 are the pitch, in order: Cover, Problem, Solution, Architecture, Rules, Trust, Metrics, Roadmap, Close. Slides 10–13 are backups (10 emails, 11 sick-day demo, 12 holiday demo, 13 3D campus). Never go past slide 9 unless you need a backup.</span></label></li>
+  </ul>
+</div>
+
+<div class="box warn">
+  <h3>Do not do the demo until these are true</h3>
+  <ul class="plain">
+    <li>Tabs 1–3 show the right name in the bottom-left corner (MZD, Timetabling Office, Amani Kestrel).</li>
+    <li><code>make reset-demo</code> was run after your last rehearsal. Otherwise the lecturer's plan is already approved and the demo won't work the same way.</li>
+  </ul>
+</div>
+
+<!-- 1 -->
+<section class="part" id="p1">
+  <div class="part-head"><span class="time">0:00 – 0:40</span><h2>1 · Hook</h2><span class="screen">Slide: Cover</span></div>
+  <div class="do"><span><b>Operator:</b> slide 1 (Cover) is on screen before he starts.</span></div>
+  <div class="say">
+    <p>"Good morning. We're <b>Team Terminal</b>, and this is <b>Campus Time Ops</b>.</p>
+    <p>APU has <b>494 lecturers</b>. If each one is sick just <b>two days a year</b>, that's around <b>20 sick days every teaching week</b>. Here's one of them.</p>
+    <p>It's <b>7:00 a.m.</b> Lecturer MZD wakes up with a fever. She has <b>3 classes</b> today. <b>12 student groups.</b> <b>513 students.</b> The first class starts at <b>8:30</b>.</p>
+    <p>Someone has to find a lecturer who <b>teaches the same module</b> and is free, find <b>free rooms</b>, check every change against <b>3,000 other classes</b> that week so nothing <b>clashes</b>, and email <b>all 513 students</b>. By hand, that's about <b>an hour</b>. For <b>one</b> sick lecturer.</p>
+    <p>We built <b>AI agents</b> that do it in <b>under one second</b>, with a human approving every step."</p>
+  </div>
+  <p class="note">Speaker: say this from memory, looking at the judges. Slow down on the numbers: one number, small pause, next number. Pause for one second at the end.<br>"About an hour" = 3 classes × about 20 minutes each by hand (our estimate). "20 sick days a week" = 494 lecturers × 2 days ÷ about 45 teaching weeks ≈ 22; it is an <i>if</i>, not APU data. Say "if".</p>
+</section>
+
+<!-- 2 -->
+<section class="part" id="p2">
+  <div class="part-head"><span class="time">0:40 – 1:20</span><h2>2 · Problem</h2><span class="screen">Slide: Problem</span></div>
+  <div class="do"><span><b>Operator:</b> next slide (Problem) when he finishes the hook.</span></div>
+  <div class="say">
+    <p>"And that's the <b>small</b> case. APU runs about <b>3,000 classes every week</b>, for <b>1,143 intakes</b>, with <b>494 lecturers</b> in <b>235 rooms</b>. Every class is tied to student groups, a room and <b>APU rules</b>: notice periods, <b>the last shuttle at 7:15 p.m.</b>, no make-up classes on holidays. Move one class and it can <b>clash</b> with ten others.</p>
+    <p>Now the <b>big</b> case. In <b>2022</b>, Malaysia announced on a <b>Thursday</b> that the next <b>Monday</b> was a public holiday. <b>Four days' notice.</b> If that happens on <b>Monday 16 November</b>: <b>598 classes. 37,264 students.</b> About <b>200 staff-hours</b> to re-plan by hand. <b>Five working weeks</b>, for one day off.</p>
+    <p><b>APSpace shows the timetable. Nothing re-plans it.</b>"</p>
+  </div>
+  <p class="note">The slide shows the same four numbers: ~3,000 a week, 1,143 intakes, 598 classes, ~200 h. (The feed holds 7,656 classes over 3 weeks; never say "7,656 a week".)<br>"200 staff-hours" = 598 classes × about 20 minutes each by hand (our estimate). "Five working weeks" = 200 ÷ 40 hours. 2022: on Thu 24 Nov the new Prime Minister declared Mon 28 Nov 2022 a public holiday (The Star, Bernama).</p>
+</section>
+
+<!-- 3 -->
+<section class="part" id="p3">
+  <div class="part-head"><span class="time">1:20 – 1:35</span><h2>3 · Solution</h2><span class="screen">Slide: Solution</span></div>
+  <div class="do"><span><b>Operator:</b> next slide (Solution).</span></div>
+  <div class="say">
+    <p>"Campus Time Ops is an <b>AI operations layer</b> on APU's <b>live timetable</b>. You tell it what happened, <b>in plain English</b>. It works out the impact, builds a <b>clash-free plan</b>, and waits. <b>Nothing changes until a person clicks approve.</b> For lecturers, the timetabling office and students.</p>
+    <p>Let me show you."</p>
+  </div>
+  <div class="do"><span><b>Operator, cue "Let me show you":</b> switch to <b>Chrome, tab 1 (⌘1, Lecturer MZD)</b>.</span></div>
+</section>
+
+<!-- 4 -->
+<section class="part" id="p4">
+  <div class="part-head"><span class="time">1:35 – 2:50</span><h2>4 · Demo 1: the sick lecturer</h2><span class="screen">Tab 1 (⌘1) · Lecturer MZD</span></div>
+  <div class="cues">
+    <div class="cue head"><div>#</div><div class="s-h">Speaker says</div><div class="d-h">Operator does</div></div>
+    <div class="cue"><div class="n">1</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"I'm the lecturer. No forms. I just say what happened."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click the suggestion under the chat box: <b>"I'm sick tomorrow, sort out my classes"</b>.<span class="w">Wait: the impact card appears (red, "3 sessions · 12 · ~513").</span></div></div>
+    <div class="cue"><div class="n">2</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"In seconds: <b>3 classes, 12 student groups, 513 students</b> affected."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Move the mouse over the three numbers on the impact card.</div></div>
+    <div class="cue"><div class="n">3</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"First it looks for a <b>substitute</b>: someone who <b>teaches the same module</b>, is free, and isn't overloaded. Found one. So two classes stay at the <b>same time, same room</b>. <b>Students don't even notice.</b>"</div>
+      <div class="d"><span class="mobile-label">Operator</span>Scroll down slowly to the plan card. Point at the two rows tagged <b>Substitute</b> ("taught by KCC").</div></div>
+    <div class="cue"><div class="n">4</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"The last class moves to a slot with <b>zero clashes</b>, and every decision shows <b>the APU rule</b> it followed."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Point at the third row, tagged <b>Rescheduled</b>, then at the small rule tags under it (R-CLASH…, R-NOTICE).</div></div>
+    <div class="cue"><div class="n">5</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"And I stay in control. I'd prefer the afternoon…"</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click <b>Prefer afternoon</b> (next to the purple button).<span class="w">Wait: a new plan card (v2) appears.</span><span class="note">Skip this row if you're behind time.</span></div></div>
+    <div class="cue"><div class="n">6</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"Only after I approve does it act. <b>One click</b>: <b>3 calendar updates</b> and <b>14 email drafts</b>, to the substitute, to me and to every student group, plus a <b>change log</b>.
+      <span style="display:block;margin-top:8px"><b>It only drafts. A human still presses send.</b></span>
+      <span style="display:block;margin-top:8px">An hour of work, done by <b>7:01</b>."</span></div>
+      <div class="d"><span class="mobile-label">Operator</span>Click the purple <b>Approve &amp; apply</b> on the newest plan card.<span class="w">Wait: the green "Applied to the timetable" card appears.</span><span class="note">Point at the <b>14 Gmail drafts</b> tile, then at the list of email subjects under it. Don't click them (they download a file). Hold for 2 seconds. If the tiles show different numbers, the speaker reads the numbers on screen.</span></div></div>
+  </div>
+  <div class="do"><span><b>Operator, cue "solved by 7:01":</b> switch to <b>tab 2 (⌘2, Timetabling Office)</b>.</span></div>
+</section>
+
+<!-- 5 -->
+<section class="part" id="p5">
+  <div class="part-head"><span class="time">2:50 – 3:55</span><h2>5 · Demo 2: a holiday for the whole campus</h2><span class="screen">Tab 2 (⌘2) · Timetabling Office</span></div>
+  <div class="cues">
+    <div class="cue head"><div>#</div><div class="s-h">Speaker says</div><div class="d-h">Operator does</div></div>
+    <div class="cue"><div class="n">1</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"Now the nightmare. The government announces <b>Monday is a public holiday</b>. The whole campus."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click the suggestion: <b>"Monday 16 Nov is now a public holiday"</b>.<span class="w">Wait about 3 seconds: "This affects 598 sessions…" appears.</span></div></div>
+    <div class="cue"><div class="n">2</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"<b>598 classes, 37,264 students.</b> Remember: <b>200 hours</b> of work by hand. Re-planned in <b>about 2 seconds</b>. <b>94% keep a real classroom. Zero clashes.</b>"</div>
+      <div class="d"><span class="mobile-label">Operator</span>Point at the time ("re-planned in 2.x s") and at "94%". Scroll slowly down past the schools (SOE, MTS, APP…).</div></div>
+    <div class="cue"><div class="n">3</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"Evening classes go online, because the last campus <b>shuttle leaves at 7:15 p.m.</b>, and the system knows that."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Keep scrolling slowly. Don't click Approve.</div></div>
+    <div class="cue"><div class="n">4</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"This is the whole campus in <b>3D</b>. Every red room is a class affected on Monday."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click <b>Campus</b> in the left menu. Then click <b>Mon 16 Nov</b> in the date strip at the bottom.<span class="w">Wait: buildings turn red.</span></div></div>
+    <div class="cue"><div class="n">5</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"And this is where those classes moved: spread across the rest of the week."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click <b>Tue 17 Nov</b> in the date strip.<span class="note">Skip this row if you're behind time.</span></div></div>
+  </div>
+  <div class="do"><span><b>Operator, cue "rest of the week" (or "Every red room" if you skipped row 5):</b> switch to <b>tab 3 (⌘3, Student Amani Kestrel)</b>.</span></div>
+</section>
+
+<!-- 6 -->
+<section class="part" id="p6">
+  <div class="part-head"><span class="time">3:55 – 4:35</span><h2>6 · Demo 3: the student dashboard</h2><span class="screen">Tab 3 (⌘3) · Student</span></div>
+  <div class="cues">
+    <div class="cue head"><div>#</div><div class="s-h">Speaker says</div><div class="d-h">Operator does</div></div>
+    <div class="cue"><div class="n">1</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"And this is what a <b>student</b> sees. No 7,000-row timetable. Only what matters to them: their <b>attendance</b>, their <b>next classes</b>, and <b>any changes to their classes</b>. If a class moves, it shows up right here."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Point at the three cards in turn: <b>Attendance</b> ring → <b>Coming up</b> → <b>Changes to my classes</b>.</div></div>
+    <div class="cue"><div class="n">2</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"At APU you need <b>80% attendance</b>, or you can be barred from the exam. We simulated <b>3,005 students</b> on the real timetable: <b>about 1 in 7</b> is already below 80%."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Point at the ring (88%).</div></div>
+    <div class="cue"><div class="n">3</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"So they just ask… <b>You're at 88%. You can miss at most 2 more classes.</b> Worked out from the <b>real remaining timetable</b>, per module."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click the suggestion <b>"How many more classes can I miss?"</b>.<span class="w">Wait: the ring card "2 more classes" appears.</span></div></div>
+    <div class="cue"><div class="n">4</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"And they can ask <b>anything</b>. This one goes to <b>Gemini</b>. It looks up her real timetable and answers. Gemini can <b>read</b>, but it has <b>no tools to change anything</b>."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Click the 4th suggestion <b>"Who is my lecturer for my next lesson, and which room is it in?"</b><span class="w">Wait (up to ~8 s): the answer with the "Answered by Gemini" label.</span><span class="note">Point at the label. Skip this row if you're behind time or Gemini was off in the check.</span></div></div>
+    <div class="cue"><div class="n">5</div>
+      <div class="s"><span class="mobile-label">Speaker</span>"Students can <b>read</b>, never change anything. Every role sees only what it needs."</div>
+      <div class="d"><span class="mobile-label">Operator</span>Point at the short student menu on the left (My timetable, Attendance, Free rooms).</div></div>
+  </div>
+  <div class="do"><span><b>Operator, cue "only what it needs":</b> switch back to the <b>slides</b> and press → once, to <b>slide 4 (Architecture)</b>.</span></div>
+</section>
+
+<!-- 7 -->
+<section class="part" id="p7">
+  <div class="part-head"><span class="time">4:35 – 5:15</span><h2>7 · How it works</h2><span class="screen">Slide: Architecture</span></div>
+  <div class="say">
+    <p>"Three pieces make this work.</p>
+    <p><b>One: Gemini.</b> The core actions you saw run on an instant, predictable path. Any open question goes to <b>Gemini</b>, which uses <b>read-only</b> tools on the live timetable. And our <b>Replan</b> and <b>Slot Finder</b> agents are built for <b>Gemini Enterprise</b>, on the same tools.</p>
+    <p><b>Two: an MCP server.</b> <b>MCP</b> is the open standard that gives AI agents real tools. Ours has <b>28 tools</b>: read the timetable, find substitutes, find rooms, draft emails.</p>
+    <p><b>Three: Google's OR-Tools CP-SAT solver.</b> A chatbot can talk about a timetable, but it <b>can't guarantee zero clashes</b> across 600 classes. A solver can.</p>
+    <p><b>The AI understands, the solver plans, the human decides.</b>"</p>
+  </div>
+  <p class="note">Don't say users can chat with it in Gemini Enterprise yet: the agent is registered there, but the hackathon project has no Google sign-in set up, so nobody can open the Gemini Enterprise chat. Say "registered in Gemini Enterprise" or "built for Gemini Enterprise". If Gemini was off in the check, the speaker drops the Gemini sentence and says: "Our Replan and Slot Finder agents are built for Gemini Enterprise, on these same tools."</p>
+</section>
+
+<!-- 8 -->
+<section class="part" id="p8">
+  <div class="part-head"><span class="time">5:15 – 5:45</span><h2>8 · Why you can trust it</h2><span class="screen">Slides: Rules → Trust</span></div>
+  <div class="do"><span><b>Operator:</b> next slide (Rules) when he starts, then Trust at "Privacy first".</span></div>
+  <div class="say">
+    <p>"AI changing a timetable can sound scary. So we made three promises.</p>
+    <p><b>Human in the loop:</b> nothing changes without approval. The system <b>refuses</b> to act on anything that isn't approved.</p>
+    <p><b>Grounded in APU's rules:</b> the <b>student handbook, holiday calendar and shuttle schedule</b>, cited in every decision.</p>
+    <p><b>Privacy first:</b> <b>public</b> data only, staff names <b>pseudonymised</b>, <b>emails only as drafts</b>, and a full <b>audit log</b>."</p>
+  </div>
+</section>
+
+<!-- 9 -->
+<section class="part" id="p9">
+  <div class="part-head"><span class="time">5:45 – 6:15</span><h2>9 · Proof</h2><span class="screen">Slide: Metrics</span></div>
+  <div class="do"><span><b>Operator:</b> next slide (Metrics).</span></div>
+  <div class="say">
+    <p>"These are measured, not promised.</p>
+    <p><b>Whole campus: 598 classes, about 2.5 seconds, zero clashes.</b> About 200 hours of work by hand.</p>
+    <p><b>Sick lecturers: across the 10 busiest lecturers, 2 out of 3 classes covered by a substitute, with no student affected.</b></p>
+    <p><b>One approval: 597 calendar updates and 378 email drafts.</b> And zero emails sent without a person."</p>
+  </div>
+  <p class="note">Speaker: one number per breath. Let each one land.</p>
+</section>
+
+<!-- 10 -->
+<section class="part" id="p10">
+  <div class="part-head"><span class="time">6:15 – 7:00</span><h2>10 · Impact and close</h2><span class="screen">Slides: Roadmap → Close</span></div>
+  <div class="do"><span><b>Operator:</b> Roadmap slide now. Close slide at "Remember our lecturer".</span></div>
+  <div class="say">
+    <p>"Next: with APU's permission, connect directly to <b>APSpace</b>, add APU login, and <b>pilot it with one school</b>. And every <b>university</b>, <b>hospital</b> and <b>shift-based business</b> has this same problem.</p>
+    <p>Remember our lecturer at 7 a.m.? Today, her sick day costs <b>an hour</b>. A holiday costs <b>five working weeks</b>. With Campus Time Ops, it's <b>one sentence, one plan, one click</b>. And her <b>513 students</b> just see the update.</p>
+    <p><b>APSpace shows the timetable. Campus Time Ops runs it.</b></p>
+    <p>Thank you."</p>
+  </div>
+  <div class="do"><span><b>Operator:</b> stay on the Close slide for Q&amp;A. Keep tabs 1–3 ready in case a judge asks to see something.</span></div>
+</section>
+
+<div class="box">
+  <h2>If something goes wrong</h2>
+  <table class="qa">
+    <tr><td>A demo answer is slow or doesn't appear</td><td>Speaker keeps talking through the line on the cue sheet. Operator waits 5 seconds, then clicks the suggestion again. Still nothing? Skip to the next demo.</td></tr>
+    <tr><td>The local app is down</td><td>Operator uses the backup tab (<code>campus-time-ops.onrender.com</code>). The holiday re-plan is slower there (about 16 s), so the speaker fills the wait with the shuttle line.</td></tr>
+    <tr><td>Both the local app and the website are down</td><td>Operator goes to the slides: <b>slide 11</b> for the sick-day demo, <b>slide 12</b> for the holiday, <b>slide 13</b> for the 3D campus. The speaker uses the same lines, then the operator goes back to slide 4.</td></tr>
+    <tr><td>The Gemini answer is slow or shows no "Answered by Gemini" label</td><td>Wait up to 8 seconds, then move on: "it answers open questions too". Don't retry on stage.</td></tr>
+    <tr><td>The assistant gives a strange answer</td><td>Don't fight it on stage. Speaker says "and you can always adjust it in plain English", and you move on.</td></tr>
+    <tr><td>Running over time</td><td>Cut in this order: Prefer afternoon (Demo 1 row 5) → Tue 17 Nov (Demo 2 row 5) → shorten Trust to one sentence. Keep the student demo.</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>Judge questions: short answers</h2>
+  <table class="qa">
+    <tr><td>What if the AI makes a mistake?</td><td>It can't act without approval, and a separate clash checker verifies every plan before anyone sees it. You can also adjust it in plain English.</td></tr>
+    <tr><td>Is this real APU data?</td><td>Yes. APU's public timetable feed, with staff names pseudonymised. The students are synthetic, so no personal data is used.</td></tr>
+    <tr><td>Why not just use ChatGPT or Gemini?</td><td>A language model can't guarantee zero clashes across 600 classes. We use AI to understand people and a real optimisation solver for the scheduling.</td></tr>
+    <tr><td>Is the chat using Gemini?</td><td>For open questions, yes: that's the "Answered by Gemini" label, with read-only tools. The core actions (sick day, holiday, approve) use a fast rules path, so they're instant, work offline and give the same result every time. The planning itself is done by OR-Tools, not by a language model.</td></tr>
+    <tr><td>Where does Gemini Enterprise fit?</td><td>Our Replan and Slot Finder agents are configured for Gemini Enterprise and use our MCP server as their tools, with Google sign-in. Our agent is registered in the hackathon's Gemini Enterprise app as an A2A agent and answers live (it drafts the MZD plan in about 9 s). Users can't open it yet only because the project's Google sign-in (identity provider) isn't set up; that's an admin setting.</td></tr>
+    <tr><td>Why can't Gemini change the timetable?</td><td>On purpose. Changes go through a plan that a person approves. Gemini only gets tools to look things up, and it tells users the exact sentence to start a change.</td></tr>
+    <tr><td>How would APU adopt it?</td><td>Keep the same tools layer, swap the public feed for the APSpace API, add APU sign-in, and pilot it with one school.</td></tr>
+    <tr><td>What does it cost to run?</td><td>One small server. The solver (Google OR-Tools) is free and open source.</td></tr>
+    <tr><td>Does it send emails by itself? / Can we see an email?</td><td>No. It only creates drafts after approval. A person presses send. <b>Operator:</b> jump to <b>slide 10</b>, which shows two real drafts from the sick-day demo.</td></tr>
+    <tr><td>Where do "an hour" and "200 hours" come from?</td><td>Our estimate of about 20 minutes per class by hand: find a slot, check clashes, book a room, email everyone. 3 classes is about 1 hour; 598 classes is about 200 hours. We'd confirm the real figure with APU's timetabling office.</td></tr>
+    <tr><td>Are the students real?</td><td>No. The 3,005 students are simulated on APU's real timetable, so no personal data is used. The "1 in 7 below 80%" comes from that simulation.</td></tr>
+  </table>
+</div>
+
+<div class="box">
+  <h2>Three things to remember</h2>
+  <ol class="ol">
+    <li>Say the tagline three times: in the hook, the solution and the close. <b>"With a human approving every step."</b></li>
+    <li>When a result appears on screen, the speaker stops talking for one second so the judges can see it.</li>
+    <li>Rehearse together twice with a timer, using the real tabs, before the pitch.</li>
+  </ol>
+</div>
+
+</div>
+
+<script>
+document.querySelectorAll('ul.check input').forEach(function(cb){
+  try{ cb.checked = localStorage.getItem('rs-'+cb.id)==='1'; }catch(e){}
+  cb.addEventListener('change',function(){ try{ localStorage.setItem('rs-'+cb.id, cb.checked?'1':'0'); }catch(e){} });
+});
+</script>

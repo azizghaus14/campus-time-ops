@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Judge Q&amp;A</title>
+<style>
+@page { size: A4; margin: 14mm 14mm 16mm; }
+:root { --ink:#16161d; --mute:#5b5b6b; --line:#e3e3ea; --acc:#5b4bd6; --soft:#f4f2ff; --warn:#fff5e6; --warnline:#e8a23a; }
+* { box-sizing:border-box; }
+body { font: 10.4pt/1.42 -apple-system, "Helvetica Neue", Arial, sans-serif; color:var(--ink); margin:0; background:#fff; }
+h1 { font-size:20pt; margin:0 0 2px; letter-spacing:-.01em; }
+.sub { color:var(--mute); margin:0 0 12px; }
+h2 { font-size:12.5pt; color:var(--acc); margin:16px 0 6px; padding-bottom:3px; border-bottom:1.5px solid var(--acc); break-after:avoid; }
+table { width:100%; border-collapse:collapse; margin:4px 0 8px; }
+th, td { text-align:left; vertical-align:top; padding:5px 7px; border-bottom:1px solid var(--line); }
+th { font-size:9pt; text-transform:uppercase; letter-spacing:.04em; color:var(--mute); }
+tr { break-inside:avoid; }
+.map td:first-child { font-weight:600; width:20%; }
+.map td:last-child { width:19%; }
+.map .st { display:inline-block; margin-bottom:2px; white-space:normal; }
+.st { font-size:8.5pt; font-weight:700; padding:1px 6px; border-radius:9px; white-space:nowrap; }
+.live { background:#e3f6ea; color:#17713b; } .built { background:#eef0ff; color:#3d34a8; } .wait { background:var(--warn); color:#8a5a12; }
+.qa { break-inside:avoid; margin:0 0 7px; padding:6px 9px; border-left:3px solid var(--line); }
+.qa b { display:block; margin-bottom:1px; }
+.qa.hot { border-left-color:var(--acc); background:var(--soft); }
+.box { background:var(--warn); border:1px solid var(--warnline); border-radius:6px; padding:8px 10px; margin:8px 0; break-inside:avoid; }
+.say { font-style:italic; }
+.small { font-size:9pt; color:var(--mute); }
+.pb { break-before:page; }
+</style></head><body>
+
+<h1>Judge Q&amp;A: Campus Time Ops</h1>
+<p class="sub">Team Terminal · APU Cloud Innovation Hackathon 2026 · Final. Short answers, one breath each. Highlighted questions are the most likely ones.</p>
+
+<h2>Where Google and Gemini Enterprise sit in our product</h2>
+<table class="map">
+<tr><th>Google service</th><th>What it does for us, and where in the code</th><th>Status today</th></tr>
+<tr><td>Gemini API (Gemini Flash-Lite)</td><td>Answers open questions in the app's chat, using function calling over about 20 <b>read-only</b> tools on the live timetable (timetable, rooms, holidays, shuttle, substitutes, attendance). Shows the "Answered by Gemini" label. <span class="small">backend/app/services/gemini.py</span></td><td><span class="st live">Live in demo</span></td></tr>
+<tr><td>Gemini Enterprise: A2A agent</td><td>Our "Campus Time Ops" agent is <b>registered in the hackathon's Gemini Enterprise app</b> (Agents → A2A custom, Enabled). Gemini Enterprise sends a message to our server, and Gemini with our tools answers. It can look things up and <b>draft</b> a re-plan; approval still happens in our app. <span class="small">backend/app/a2a.py, served at a secret path</span></td><td><span class="st live">Registered + answering</span><br><span class="st wait">Chat opens once Google sign-in is set</span></td></tr>
+<tr><td>Gemini Enterprise: MCP connector</td><td>The same tools exposed as a "Custom MCP Server" connector, protected by <b>Google OAuth</b> (we verify the Google access token and client ID). <span class="small">backend/app/main.py, services/oauth.py</span></td><td><span class="st built">Built + deployed</span></td></tr>
+<tr><td>Gemini Enterprise agent designs</td><td>Replan and Slot Finder agent instructions and configs, plus an ADK fallback agent. <span class="small">agents/replan, agents/slot_finder, agents/adk_app</span></td><td><span class="st built">Built</span></td></tr>
+<tr><td>Google OR-Tools CP-SAT</td><td>The optimisation solver that builds every plan with zero clashes: 598 classes in about 2.5 s. <span class="small">backend/app/solver</span></td><td><span class="st live">Live in demo</span></td></tr>
+<tr><td>Google Workspace (Calendar, Gmail, Docs)</td><td>After approval: calendar events, <b>Gmail drafts only</b> (never sent) and a change-log doc. Two modes: <b>local</b> writes standard calendar/email files (used in the demo), <b>google</b> calls the Calendar, Gmail (drafts.create) and Docs APIs for demo Workspace accounts only. <span class="small">backend/app/services/workspace.py</span></td><td><span class="st live">Demo: draft files</span><br><span class="st built">Google API mode built</span></td></tr>
+<tr><td>Google Cloud Firestore</td><td>Optional store for plans, approvals and the audit log (same interface as the local JSON store; emulator supported). <span class="small">backend/app/services/store.py</span></td><td><span class="st built">Built, off in demo</span></td></tr>
+<tr><td>Google Cloud project</td><td>Hackathon project "APU-Hackathon": Gemini API key, Gemini Enterprise app "Campus Time Ops", our registered agent. Cloud Run deploy target in the Makefile; the public site runs on Render.</td><td><span class="st live">In use</span></td></tr>
+</table>
+
+<div class="box"><b>The honest one-liner on Gemini Enterprise:</b> <span class="say">"Our agent is registered in Gemini Enterprise and answers live. It drafts the sick-lecturer plan in about 9 seconds. Users can't open the Gemini Enterprise chat yet only because the hackathon project has no Google sign-in configured, which is an admin setting."</span><br><span class="small">Don't claim judges can chat with it in Gemini Enterprise today. If asked to show it: open the Gemini Enterprise console → Agents, where "Campus Time Ops · A2A (Custom) · Enabled" is listed.</span></div>
+
+<h2>AI, Gemini and Gemini Enterprise</h2>
+<div class="qa hot"><b>Is the chat actually using Gemini?</b>For open questions, yes. That's the "Answered by Gemini" label, with read-only tools on the real timetable. Core actions (sick day, holiday, approve) use a fast rules path, so they're instant and give the same result every time. The planning itself is done by the OR-Tools solver, not by a language model.</div>
+<div class="qa hot"><b>Why not just ask Gemini or ChatGPT to re-plan the timetable?</b>A language model can't guarantee zero clashes across 600 classes and thousands of constraints. We use AI to understand people, and a real optimisation solver to plan. Then an independent clash checker verifies every plan.</div>
+<div class="qa hot"><b>Where does Gemini Enterprise fit? Is it live?</b>Our agent is registered in the hackathon's Gemini Enterprise app as an A2A agent and answers live. Staff could ask it inside Gemini Enterprise, "Lecturer MZD is sick tomorrow", and it drafts the plan with our tools. The chat isn't open to users yet because the project's Google sign-in isn't configured.</div>
+<div class="qa"><b>What is A2A / MCP, in one sentence?</b>MCP is the open standard that gives AI agents real tools: ours has 28. A2A is the standard that lets one agent platform, here Gemini Enterprise, talk to another agent, ours.</div>
+<div class="qa hot"><b>Why can't Gemini change the timetable?</b>On purpose. Gemini only gets tools to look things up and to create a <i>draft</i>. Any change goes through a plan that a person approves. The API refuses to execute anything that isn't approved.</div>
+<div class="qa"><b>What if Gemini makes something up?</b>It answers from tool results on the live timetable, not from memory. Every plan comes from the solver and shows the rule behind each decision. If Gemini is down, the core features still work.</div>
+<div class="qa"><b>Which Gemini model and why?</b>Gemini Flash-Lite for the chat: fast and cheap for short lookups. The model is one setting, so it can be swapped for a bigger one.</div>
+<div class="qa"><b>What happens if the Gemini API is down or out of quota?</b>The core demo doesn't depend on it. Sick day, holiday, approvals, slots and attendance run on the rules path and the solver. Only open-ended questions need Gemini.</div>
+
+<h2>The solver and the numbers</h2>
+<div class="qa hot"><b>How does it re-plan 598 classes in 2.5 seconds?</b>Google OR-Tools CP-SAT. Each moved class gets a time and room chosen so no group, lecturer or room double-books, rules like the shuttle and holidays are respected, and disruption is kept small. Every solution is re-checked for clashes independently.</div>
+<div class="qa"><b>What does "zero clashes" mean exactly?</b>No student group, lecturer or room is in two places at once, checked against every other class that week, not just the moved ones.</div>
+<div class="qa"><b>What is the "1 needs a decision" in the holiday plan?</b>One class where every feasible slot was already taken. The system doesn't force it; it flags it for a person. Better to be honest than to break a rule.</div>
+<div class="qa"><b>How is a substitute chosen?</b>Someone who already teaches the same module, is free at that exact time, and stays within a load limit (at most 3 sessions that day). Then the class keeps its time and room, and students don't notice.</div>
+<div class="qa"><b>Where do "an hour" and "200 hours" come from?</b>Our estimate: about 20 minutes per class by hand (find a slot, check clashes, book a room, email everyone). 3 classes is about 1 hour; 598 classes is about 200 hours. We'd confirm the real figure with APU's timetabling office.</div>
+<div class="qa hot"><b>Where does "20 sick days a week" come from?</b>It's an <i>if</i>, not APU data: 494 lecturers × 2 sick days a year ÷ about 45 teaching weeks ≈ 22. Even a modest sick rate means this happens every week.</div>
+<div class="qa"><b>Surprise holidays are rare. Why build for that?</b>They do happen: on Thursday 24 Nov 2022 the new Prime Minister declared Monday 28 Nov a public holiday, with four days' notice. And the same engine handles the everyday cases: sick lecturers, rooms closed for repairs, vivas and make-up classes.</div>
+<div class="qa"><b>Will it scale?</b>The whole-campus holiday is the worst case we tested: 598 classes in about 2.5 s on a laptop, about 7–8.5 s on a 2-core cloud server. Three holiday days, 1,806 classes, took 2.57 s.</div>
+<div class="qa"><b>Why is the website slower than your laptop?</b>The public site runs on a free 512 MB server with one solver worker. Same plan, more seconds. A normal paid instance closes the gap.</div>
+<div class="qa"><b>How do you know it works beyond the demo?</b>65 automated tests, including property tests on the solver. Benchmarks on the 10 busiest lecturers (67% covered by a substitute) and the 5 busiest rooms closed for a week (100% stay physical). Details in docs/METRICS.md.</div>
+
+<h2>Data, privacy and trust</h2>
+<div class="qa hot"><b>Is this real APU data?</b>Yes. APU's public timetable feed: 7,656 classes over 10–28 Nov, 1,143 intakes, 494 lecturers, 235 rooms. Staff names are pseudonymised (MZD, KCC…). The rules come from the Student Handbook, the 2026 holiday schedule and the shuttle timetable.</div>
+<div class="qa"><b>Are the students real?</b>No. 3,005 students are simulated on the real timetable, so no personal data is used. "About 1 in 7 below 80%" comes from that simulation.</div>
+<div class="qa hot"><b>What if the AI makes a mistake?</b>It can't act without approval. A separate clash checker verifies every plan before anyone sees it. You can adjust it in plain English ("prefer afternoon", "no substitute") or reject it.</div>
+<div class="qa"><b>Does it send emails by itself? Can we see one?</b>No. It only creates drafts after approval, and a person presses send. Operator: slide 10 shows two real drafts from the sick-day demo.</div>
+<div class="qa"><b>Who can do what?</b>Students only read their own timetable and attendance. Lecturers can fix their own classes. Campus-wide changes need the timetabling office. The API enforces this, not just the screen.</div>
+<div class="qa"><b>Is there an audit trail?</b>Yes. Every plan, version, approval and action is logged with who and when (the office's Audit log page).</div>
+<div class="qa"><b>PDPA / data protection?</b>The prototype uses only public data plus synthetic students. In production it would run on APU's own Google Cloud with APU sign-in, and personal data never leaves APU's systems.</div>
+
+<h2>Product, adoption and business</h2>
+<div class="qa hot"><b>How would APU adopt it?</b>Keep the same tools layer, swap the public feed for the APSpace API, add APU single sign-on (or open it inside Gemini Enterprise), and pilot it with one school.</div>
+<div class="qa"><b>How is this different from APSpace?</b>APSpace shows the timetable. We re-plan it: impact, substitute, new slot, room, emails, calendar, in one approval.</div>
+<div class="qa"><b>What does it cost to run?</b>One small server. OR-Tools is free and open source. Gemini Flash-Lite costs fractions of a cent per question, and only open questions use it.</div>
+<div class="qa"><b>What about Google Calendar and Gmail: are those real?</b>In the demo the approved actions are written as standard calendar and email draft files, so nothing reaches real people. The Google Workspace mode (Calendar API, Gmail drafts, Docs) is built for demo Workspace accounts and switched by one setting.</div>
+<div class="qa"><b>Who else could use this?</b>Any university, then anything with shifts and rooms: hospitals, airports, exam scheduling.</div>
+<div class="qa"><b>What would you build next?</b>APSpace connection and APU sign-in, Gemini Enterprise opened to staff, exam-period planning, and real attendance data.</div>
+<div class="qa"><b>What was the hardest part?</b>Making the plans trustworthy: a solver that guarantees no clashes, rules cited on every decision, and a hard stop before anything happens without a human.</div>
+
+<h2>Tricky ones: stay calm</h2>
+<div class="qa"><b>"So Gemini Enterprise isn't really working?"</b><span class="say">"The agent is registered and answers. We tested it live today. What's missing is the project's sign-in setting, which only an admin can turn on. Our own app runs Gemini live, as you saw."</span></div>
+<div class="qa"><b>"Isn't the AI just a rules engine?"</b>The scheduling is deliberately a solver, because that's what guarantees correctness. Gemini handles open language and lookups. Using the right tool for each job is the design.</div>
+<div class="qa"><b>"Can you show a different lecturer or date?"</b>Yes. Lecturer tab → Switch persona → pick SPG or CMM, then "I'm sick tomorrow". Or type a room: "Room B-04-03 is flooded until Friday" in the Office tab. After that, run <code>make reset-demo</code> before showing anything else.</div>
+<div class="qa"><b>"Why does a hackathon project hold up in production?"</b>It's built on the real feed with tests, role checks enforced by the API, an audit log, and swappable backends (Firestore, Google Workspace). The path to production is configuration, not a rewrite.</div>
+
+<p class="small" style="margin-top:12px">If you don't know: "Good question. We haven't measured that yet. Our guess is X, and here's how we'd check." Never invent a number.</p>
+</body></html>

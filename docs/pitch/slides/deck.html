@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Campus Time Ops slides</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* 1920x1080 slides in the app's design language: near-black canvas, violet->blue aurora, liquid glass, sparse stardust. */
+:root{--bg:#040406;--text:#f5f5f7;--muted:#a3a3b2;--faint:#7c7c89;--accent:#8b7cff;--accent2:#4f8dff;--violet:#b39dff;--green:#34d399;--red:#ff5c6c;--amber:#fbbf24}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;font-family:Geist,sans-serif;color:var(--text);-webkit-font-smoothing:antialiased;letter-spacing:-.01em}
+section{width:1920px;height:1080px;position:relative;overflow:hidden;isolation:isolate;background:var(--bg);padding:116px 128px 0;display:flex;flex-direction:column}
+.bg{position:absolute;inset:0;z-index:-3;
+  background:radial-gradient(1300px 760px at 6% -12%,rgba(139,124,255,.26),transparent 60%),
+             radial-gradient(1100px 640px at 104% -6%,rgba(79,141,255,.20),transparent 60%),var(--bg)}
+.aurora{position:absolute;inset:0;z-index:-2;pointer-events:none;-webkit-mask-image:linear-gradient(to top,#000 30%,transparent 92%)}
+.aurora i{position:absolute;border-radius:50%;filter:blur(110px);mix-blend-mode:screen}
+.aurora .a1{width:62%;height:80%;left:19%;bottom:-52%;background:radial-gradient(closest-side,#7a5cff,transparent)}
+.aurora .a2{width:52%;height:72%;left:-6%;bottom:-46%;background:radial-gradient(closest-side,#2f6bff,transparent)}
+.aurora .a3{width:50%;height:70%;right:-8%;bottom:-48%;background:radial-gradient(closest-side,#c63dff,transparent);opacity:.65}
+.aurora .a4{width:30%;height:44%;left:36%;bottom:-22%;background:radial-gradient(closest-side,#b9c8ff,transparent);opacity:.45}
+.soft .aurora{opacity:.5}
+.strong .aurora{opacity:1.25}
+canvas.dust{position:absolute;inset:0;z-index:-1;pointer-events:none}
+
+.eb{font:500 22px/1 "Geist Mono",monospace;letter-spacing:.16em;text-transform:uppercase;
+  background:linear-gradient(90deg,#c4b8ff,#8fb4ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1,h2{font-weight:600;letter-spacing:-.035em;line-height:1.04;text-wrap:balance}
+h1{font-size:150px}
+h2{font-size:76px;margin:26px 0 56px;max-width:1560px}
+.grad{background:linear-gradient(92deg,#fff 0%,#e4dcff 40%,#b6ceff 75%,#d8c9ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:34px;line-height:1.45;color:#c9c9d6;max-width:1340px;font-weight:400}
+.lead b{color:#fff;font-weight:600}
+.foot{position:absolute;left:128px;right:128px;bottom:56px;font:400 19px/1.4 "Geist Mono",monospace;color:#8e8ea0;letter-spacing:.01em}
+
+/* liquid glass, as in the app */
+.glass{position:relative;isolation:isolate;border-radius:30px;padding:40px 42px;
+  background:linear-gradient(180deg,rgba(255,255,255,.075) 0%,rgba(255,255,255,.018) 38%,rgba(255,255,255,0) 60%),rgba(22,22,32,.55);
+  backdrop-filter:blur(40px) saturate(170%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -22px 40px -32px rgba(170,150,255,.38),0 40px 80px -40px rgba(0,0,0,.9)}
+.glass::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1.5px;pointer-events:none;z-index:-1;
+  background:linear-gradient(150deg,rgba(255,255,255,.30),rgba(255,255,255,.06) 35%,rgba(255,255,255,.03) 65%,rgba(170,150,255,.26));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+/* highlighted glass: lit from below, a coloured rim and light refracting off the bottom edge */
+.glass.hl{background:radial-gradient(90% 130% at 50% 135%,rgba(150,130,255,.34),transparent 62%),
+  linear-gradient(180deg,rgba(255,255,255,.085),rgba(255,255,255,.02) 45%,rgba(255,255,255,.04)),rgba(18,16,30,.6);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.26),inset 0 -1px 0 rgba(200,185,255,.45),inset 0 -26px 44px -30px rgba(170,150,255,.6),0 40px 90px -36px rgba(90,70,230,.75)}
+.glass.hl::before{padding:2px;background:conic-gradient(from 200deg,rgba(255,255,255,.12) 0deg,rgba(190,170,255,.95) 60deg,rgba(120,180,255,.9) 110deg,rgba(255,255,255,.12) 170deg,rgba(255,255,255,.1) 240deg,rgba(255,150,230,.55) 300deg,rgba(255,255,255,.12) 340deg)}
+.glass.hl::after{content:"";position:absolute;left:18%;right:18%;bottom:-1px;height:2px;border-radius:9px;
+  background:linear-gradient(90deg,transparent,rgba(212,201,255,.95) 30%,#fff 50%,rgba(156,192,255,.95) 70%,transparent);
+  box-shadow:0 0 18px 3px rgba(160,140,255,.65),0 0 52px 10px rgba(80,130,255,.32)}
+.pool{position:absolute;left:8%;right:8%;bottom:-70px;height:140px;z-index:-2;border-radius:50%;filter:blur(46px);
+  background:radial-gradient(closest-side,rgba(150,128,255,.55),rgba(79,141,255,.25) 60%,transparent)}
+
+.row{display:grid;gap:30px}
+.c2{grid-template-columns:1fr 1fr}.c3{grid-template-columns:repeat(3,1fr)}.c4{grid-template-columns:repeat(4,1fr)}
+.num{font-size:96px;font-weight:600;letter-spacing:-.045em;line-height:1}
+.lbl{font-size:25px;line-height:1.35;color:var(--muted);margin-top:16px}
+.lbl b{color:#fff;font-weight:500}
+.ct{font-size:38px;font-weight:600;letter-spacing:-.02em;margin:22px 0 14px}
+.cb{font-size:25px;line-height:1.45;color:var(--muted)}
+.ic{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;
+  background:linear-gradient(135deg,rgba(154,140,255,.28),rgba(79,141,255,.18));box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.ic svg{width:28px;height:28px;stroke:#d9d2ff;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tag{display:inline-block;font:500 18px/1 "Geist Mono",monospace;letter-spacing:.12em;text-transform:uppercase;color:#c4b8ff}
+.g{color:var(--green)}.r{color:var(--red)}.v{color:var(--violet)}
+table{width:100%;border-collapse:collapse;font-size:26px}
+th{font:500 18px/1 "Geist Mono",monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);text-align:left;padding:0 18px 20px}
+td{padding:21px 18px;border-top:1px solid rgba(255,255,255,.08);color:#d6d6e0;vertical-align:top}
+td:first-child{font-family:"Geist Mono",monospace;font-size:23px;color:#c4b8ff;white-space:nowrap}
+td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.arrow{display:flex;align-items:center;justify-content:center;color:#9a8cff;font-size:52px}
+.shot{border-radius:22px;overflow:hidden;display:block;width:100%}
+.shotwrap{padding:14px;border-radius:34px}
+</style></head><body>
+
+<!-- 1 Cover -->
+<section class="strong" style="justify-content:center;padding-top:0">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i><i class="a4"></i></div><canvas class="dust" data-n="95"></canvas>
+  <div class="eb">APU Cloud Innovation Hackathon 2026 · Intelligent Automation</div>
+  <h1 class="grad" style="margin:34px 0 40px">Campus Time Ops</h1>
+  <p class="lead" style="font-size:40px;max-width:1300px">The AI operations layer for APU's timetable: plan, re-plan and run the campus, <b>with a human approving every step.</b></p>
+  <div class="foot">Team Terminal · Gemini · Google OR-Tools CP-SAT · MCP</div>
+</section>
+
+<!-- 2 Problem -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="45"></canvas>
+  <div class="eb">The problem</div>
+  <h2>APU's timetable is huge, live, and nobody can re-plan it fast</h2>
+  <div class="row c4">
+    <div class="glass"><div class="num grad">~3,000</div><div class="lbl">classes <b>every week</b></div></div>
+    <div class="glass"><div class="num grad">1,143</div><div class="lbl">intakes · <b>494</b> lecturers · <b>235</b> rooms</div></div>
+    <div class="glass"><div class="num r">598</div><div class="lbl">classes hit by <b>one holiday Monday</b> · 37,264 students</div></div>
+    <div class="glass hl"><div class="pool"></div><div class="num grad">~200 h</div><div class="lbl">of staff time to re-plan that <b>one day</b> by hand</div></div>
+  </div>
+  <p class="lead" style="margin-top:58px">A sick lecturer, a flooded room or a surprise holiday means phone calls, spreadsheets and emails. <b>APSpace shows timetables. Nothing re-plans them.</b></p>
+  <div class="foot">Source: APU public timetable feed, snapshot 12 Nov 2026 (7,656 classes, 10–28 Nov). ~200 h = 598 classes × ~20 min each by hand (our estimate).</div>
+</section>
+
+<!-- 3 Solution -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="45"></canvas>
+  <div class="eb">What we built</div>
+  <h2>Say what happened. <span class="grad">Approve the plan.</span> Done.</h2>
+  <div class="row c3">
+    <div class="glass hl"><div class="pool"></div><div class="ic"><svg viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="ct">Replan</div><div class="cb">Sick lecturer, closed room or holiday: finds a substitute who teaches the module, else a clash-free new slot and room.</div></div>
+    <div class="glass"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div><div class="ct">Slot Finder</div><div class="cb">Vivas, make-ups, talks: the times when every group, every examiner and a fitting room are free.</div></div>
+    <div class="glass"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/></svg></div><div class="ct">Insights</div><div class="cb">A live 3D campus, room heat maps, timetable health and "how many more classes can I miss?"</div></div>
+  </div>
+  <p class="lead" style="margin-top:58px">One assistant for three roles: <b>timetabling office, lecturer, student</b>. Each sees only what they need.</p>
+</section>
+
+<!-- 4 Architecture -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="40"></canvas>
+  <div class="eb">How it's built</div>
+  <h2 style="margin-bottom:44px">The AI understands. <span class="grad">The solver plans.</span> The human decides.</h2>
+  <div class="row c2" style="gap:30px">
+    <div class="glass" style="padding:32px 40px"><div class="tag">Front door 1 · live</div><div class="ct" style="margin:12px 0 8px">Web app + Gemini</div><div class="cb">Gemini answers open questions · instant path for core actions · 3D campus</div></div>
+    <div class="glass" style="padding:32px 40px"><div class="tag">Front door 2 · ready to connect</div><div class="ct" style="margin:12px 0 8px">Gemini Enterprise agents</div><div class="cb">Replan + Slot Finder, built on the same MCP tools</div></div>
+  </div>
+  <div class="arrow" style="height:64px">↓</div>
+  <div class="glass hl" style="padding:34px 44px"><div class="pool"></div>
+    <div style="display:flex;align-items:baseline;gap:26px"><div class="ct" style="margin:0;font-size:44px">Campus MCP server + API</div><div class="tag">28 tools</div></div>
+    <div class="cb" style="margin-top:10px">timetable · rooms · holidays · shuttle · substitutes · <b style="color:#fff;font-weight:500">OR-Tools CP-SAT solver</b> · slots · proposals · approvals · attendance</div></div>
+  <div class="arrow" style="height:64px">↓</div>
+  <div class="row c3">
+    <div class="glass" style="padding:28px 36px"><div class="tag">Data</div><div class="cb" style="margin-top:10px">APU public feed, pseudonymised</div></div>
+    <div class="glass" style="padding:28px 36px"><div class="tag">Rules</div><div class="cb" style="margin-top:10px">Handbook · holidays · shuttle</div></div>
+    <div class="glass" style="padding:28px 36px"><div class="tag">Actions</div><div class="cb" style="margin-top:10px">Calendar · Gmail drafts · change log</div></div>
+  </div>
+</section>
+
+<!-- 5 Rules -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="35"></canvas>
+  <div class="eb">Real data, real rules</div>
+  <h2>Every decision <span class="grad">cites the rule</span> behind it</h2>
+  <div class="glass" style="padding:34px 26px 18px">
+    <table>
+      <tr><th>Rule</th><th>What it enforces</th><th>Source</th></tr>
+      <tr><td>R-ATT-80</td><td>80% attendance for each module</td><td>Student Handbook §2.2</td></tr>
+      <tr><td>R-NOTICE-HB</td><td>As much notice as possible of timetable changes</td><td>Student Handbook §3.1</td></tr>
+      <tr><td>R-HOL</td><td>No make-up classes on public or university holidays</td><td>APU Holiday Schedule 2026</td></tr>
+      <tr><td>R-SHUTTLE</td><td>Physical classes end 15 min before the last shuttle</td><td>APU shuttle PDF, 22 Oct 2026</td></tr>
+      <tr><td>R-SUB-*</td><td>Substitute teaches the module, is free, ≤ 3 sessions that day</td><td>Prototype rule (labelled)</td></tr>
+    </table>
+  </div>
+  <div class="foot">Rules quoted from APU documents are marked QUOTED. Prototype choices are marked ASSUMPTION or VERIFY, never mixed up.</div>
+</section>
+
+<!-- 6 Trust -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="40"></canvas>
+  <div class="eb">Responsible by design</div>
+  <h2>AI proposes. <span class="grad">A person decides.</span></h2>
+  <div class="row c2">
+    <div class="glass hl"><div class="pool"></div><div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><div class="ct">Human approval, enforced</div><div class="cb">Actions are refused unless a plan is APPROVED. Gemini gets read-only tools: it can look up, never change.</div></div>
+    <div class="glass"><div class="ic"><svg viewBox="0 0 24 24"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg></div><div class="ct">Drafts only</div><div class="cb">The system never sends email. People review the Gmail drafts and send them.</div></div>
+    <div class="glass"><div class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div><div class="ct">Right view for each role</div><div class="cb">Students read only their own data. Lecturers fix their own classes. Campus-wide changes need the office.</div></div>
+    <div class="glass"><div class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M16 4a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg></div><div class="ct">Privacy first</div><div class="cb">Public feed only, staff names pseudonymised, every student synthetic.</div></div>
+  </div>
+</section>
+
+<!-- 7 Metrics -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="40"></canvas>
+  <div class="eb">Measured, not promised</div>
+  <h2 style="margin-bottom:40px">Results on <span class="grad">APU's real timetable</span></h2>
+  <div class="glass" style="padding:30px 26px 10px">
+    <table>
+      <tr><th>Disruption</th><th style="text-align:right">Classes</th><th style="text-align:right">Solve</th><th>Outcome</th></tr>
+      <tr><td style="font-family:Geist;font-size:26px;color:#fff">Sick lecturer (10 busiest)</td><td class="n">33</td><td class="n">0.001 s</td><td>67% covered by a substitute, rest rescheduled</td></tr>
+      <tr><td style="font-family:Geist;font-size:26px;color:#fff">Room closed Mon–Fri (5 busiest)</td><td class="n">101</td><td class="n">0.067 s</td><td>100% stay physical</td></tr>
+      <tr><td style="font-family:Geist;font-size:26px;color:#fff">Whole-campus holiday (3 days)</td><td class="n">1,806</td><td class="n">2.57 s</td><td>93.9% physical · 5.6% online · 0.5% open</td></tr>
+    </table>
+  </div>
+  <div class="row c3" style="margin-top:34px">
+    <div class="glass hl" style="padding:32px 40px"><div class="pool"></div><div class="num g" style="font-size:80px">0</div><div class="lbl">clashes, checked independently after every solve</div></div>
+    <div class="glass" style="padding:32px 40px"><div class="num grad" style="font-size:80px">597 · 378</div><div class="lbl">calendar events · email drafts from <b>one approval</b></div></div>
+    <div class="glass" style="padding:32px 40px"><div class="num grad" style="font-size:80px">~200 h</div><div class="lbl">staff time saved per campus holiday (est.)</div></div>
+  </div>
+  <div class="foot">65 automated tests incl. property tests · solve times measured on the committed snapshot (docs/METRICS.md)</div>
+</section>
+
+<!-- 8 Roadmap -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="45"></canvas>
+  <div class="eb">What comes next</div>
+  <h2>From prototype to <span class="grad">the operating layer</span></h2>
+  <div class="row c3">
+    <div class="glass"><div class="tag">Now</div><div class="ct">Gemini Enterprise</div><div class="cb">The same agents inside Gemini Enterprise, connected to our MCP server with Google sign-in.</div></div>
+    <div class="glass hl"><div class="pool"></div><div class="tag">With APU</div><div class="ct">APSpace + one-school pilot</div><div class="cb">Real attendance and room data, APU single sign-on, a pilot with one school, then exam-period planning.</div></div>
+    <div class="glass"><div class="tag">Beyond APU</div><div class="ct">Any timetable</div><div class="cb">Other universities, then shift and room planning for hospitals, airports and enterprises.</div></div>
+  </div>
+</section>
+
+<!-- 9 Close -->
+<section class="strong" style="justify-content:center;padding-top:0">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i><i class="a4"></i></div><canvas class="dust" data-n="95"></canvas>
+  <div class="eb">Campus Time Ops</div>
+  <h2 style="font-size:104px;margin:34px 0 48px;max-width:1640px">APSpace shows the timetable.<br><span class="grad">Campus Time Ops runs it.</span></h2>
+  <p class="lead" style="font-size:34px">One sentence. One plan. One click. <b>With a human approving every step.</b></p>
+  <div class="foot" style="font-size:22px;color:#b9b9c8">Live demo: campus-time-ops.onrender.com &nbsp;·&nbsp; Code: github.com/azizghaus14/campus-time-ops &nbsp;·&nbsp; Team Terminal</div>
+</section>
+
+<!-- 10 Backup: emails -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="30"></canvas>
+  <div class="eb">What one approval writes</div>
+  <h2 style="margin-bottom:44px">Every email is a draft. <span class="grad">A person presses send.</span></h2>
+  <div class="row c2">
+    <div class="glass" style="font-size:24px;line-height:1.5"><span class="tag" style="color:var(--amber)">Draft · not sent</span>
+      <div style="display:grid;grid-template-columns:110px 1fr;row-gap:6px;margin:18px 0 18px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)"><span class="muted" style="color:var(--faint)">To</span><span>Substitute lecturer KCC</span><span style="color:var(--faint)">Subject</span><span style="font-weight:600">Please confirm: cover 2 sessions for MZD</span></div>
+      <div style="color:#c9c9d6">Assoc. Prof. Lecturer MZD is unavailable. You teach the same module, are free at these times and stay within the daily load limit, so we would like to ask you to cover:<br>· Motion Graphics · Fri 13 Nov 08:30–10:30 · E-09-07 · ~50 students<br>· Motion Graphics · Fri 13 Nov 10:40–12:40 · E-07-02 · ~30 students</div></div>
+    <div class="glass" style="font-size:24px;line-height:1.5"><span class="tag" style="color:var(--amber)">Draft · not sent</span>
+      <div style="display:grid;grid-template-columns:110px 1fr;row-gap:6px;margin:18px 0 18px;padding-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)"><span style="color:var(--faint)">To</span><span>Students of APD2F2609DA</span><span style="color:var(--faint)">Subject</span><span style="font-weight:600">Class rescheduled: Lecturer MZD unavailable</span></div>
+      <div style="color:#c9c9d6">Please note the following change:<br>· Web Design &amp; Development (G1)<br>&nbsp;&nbsp;Fri 13 Nov 14:30–17:30 → <b class="g">Mon 16 Nov 10:45–13:45 in D-07-15</b><br>Your calendar has been updated. Planned by Campus Time Ops and approved by a member of staff.</div></div>
+  </div>
+  <div class="row c3" style="margin-top:34px">
+    <div class="glass" style="padding:26px 38px"><div class="num grad" style="font-size:64px">14</div><div class="lbl" style="margin-top:8px">drafts for one sick day</div></div>
+    <div class="glass" style="padding:26px 38px"><div class="num grad" style="font-size:64px">378</div><div class="lbl" style="margin-top:8px">drafts for a campus holiday</div></div>
+    <div class="glass hl" style="padding:26px 38px"><div class="pool"></div><div class="num g" style="font-size:64px">0</div><div class="lbl" style="margin-top:8px">sent without a person</div></div>
+  </div>
+</section>
+
+<!-- 11 Backup: sick day -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="30"></canvas>
+  <div class="eb">Demo 1 · A lecturer</div>
+  <h2 style="margin-bottom:40px">"I'm sick tomorrow, <span class="grad">sort out my classes</span>"</h2>
+  <div style="display:grid;grid-template-columns:600px 1fr;gap:44px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div class="glass" style="padding:28px 34px"><span class="tag r" style="color:var(--red)">Impact</span><div class="ct" style="margin:10px 0 6px">3 classes</div><div class="cb">12 student groups · ~513 students</div></div>
+      <div class="glass" style="padding:28px 34px"><span class="tag">Plan · 0.007 s</span><div class="ct" style="margin:10px 0 6px">2 substitutes + 1 move</div><div class="cb">Same module, same time and room: no student affected. 1 class to a clash-free slot.</div></div>
+      <div class="glass hl" style="padding:28px 34px"><div class="pool"></div><span class="tag" style="color:var(--green)">Approved</span><div class="ct" style="margin:10px 0 6px">3 events · 14 drafts</div><div class="cb">Calendar, Gmail drafts, change log, audit trail</div></div>
+    </div>
+    <div class="glass shotwrap"><img class="shot" src="sick-plan.jpg"></div>
+  </div>
+</section>
+
+<!-- 12 Backup: holiday -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="30"></canvas>
+  <div class="eb">Demo 2 · The timetabling office</div>
+  <h2 style="margin-bottom:40px">"Monday 16 Nov is now <span class="grad">a public holiday</span>"</h2>
+  <div style="display:grid;grid-template-columns:600px 1fr;gap:44px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:22px">
+      <div class="glass" style="padding:28px 34px"><div class="num r" style="font-size:76px">598</div><div class="lbl" style="margin-top:8px">classes affected · 37,264 students</div></div>
+      <div class="glass hl" style="padding:28px 34px"><div class="pool"></div><div class="num grad" style="font-size:76px">2.5 s</div><div class="lbl" style="margin-top:8px">to re-plan the whole campus (CP-SAT)</div></div>
+      <div class="glass" style="padding:28px 34px"><div class="num g" style="font-size:76px">94%</div><div class="lbl" style="margin-top:8px">keep a physical room · <b>0 clashes</b></div></div>
+    </div>
+    <div class="glass shotwrap"><img class="shot" src="holiday.jpg"></div>
+  </div>
+  <div class="foot">Evening classes go online: the last regular shuttle leaves at 19:15. About 7–8.5 s on a 2-core cloud server, same plan quality.</div>
+</section>
+
+<!-- 13 Backup: campus -->
+<section class="soft">
+  <div class="bg"></div><div class="aurora"><i class="a2"></i><i class="a3"></i><i class="a1"></i></div><canvas class="dust" data-n="30"></canvas>
+  <div class="eb">See the campus</div>
+  <h2 style="margin-bottom:40px">A live 3D campus, <span class="grad">built from APU's room codes</span></h2>
+  <div style="display:grid;grid-template-columns:520px 1fr;gap:44px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:20px">
+      <div class="glass" style="padding:24px 32px"><div class="ct" style="margin:0 0 4px"><span class="v">■</span> In use</div><div class="cb">rooms with a class now</div></div>
+      <div class="glass hl" style="padding:24px 32px"><div class="pool"></div><div class="ct" style="margin:0 0 4px"><span class="r">■</span> Affected</div><div class="cb">classes hit by the disruption</div></div>
+      <div class="glass" style="padding:24px 32px"><div class="ct" style="margin:0 0 4px"><span class="g">■</span> Moved here</div><div class="cb">where the plan sends classes</div></div>
+      <div class="glass" style="padding:24px 32px"><div class="ct" style="margin:0 0 4px"><span style="color:#55556a">■</span> Free</div><div class="cb">study space, make-up slots</div></div>
+    </div>
+    <div class="glass shotwrap"><img class="shot" src="campus.jpg"></div>
+  </div>
+</section>
+
+<script>
+// Sparse, static stardust: seeded so every render is identical; denser and brighter near the aurora at the bottom.
+function rng(s){return()=>{s|=0;s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+
+const PAL=[[214,204,255],[176,160,255],[150,190,255],[255,184,236],[240,240,255]];
+document.querySelectorAll('canvas.dust').forEach((c,idx)=>{
+  const W=1920,H=1080;c.width=W;c.height=H;const g=c.getContext('2d');const r=rng(idx*977+13);
+  g.globalCompositeOperation='lighter';
+  const n=+c.dataset.n;
+  for(let i=0;i<n;i++){
+    const spread=(r()+r()+r()-1.5)/1.5;const x=W/2+spread*W*0.62;
+    const y=H*(1-Math.pow(r(),2.1)*0.95);                 // biased toward the bottom
+    if(y>H-90&&x>100&&x<1880)continue;const big=r()<0.07;const s=big?16+r()*12:5+r()*7;
+    const a=(0.25+0.75*(y/H))*(0.45+r()*0.55);
+    const [R,G,B]=PAL[Math.floor(r()*PAL.length)];
+    const gr=g.createRadialGradient(x,y,0,x,y,s);
+    gr.addColorStop(0,`rgba(255,255,255,${a})`);gr.addColorStop(.12,`rgba(${R},${G},${B},${a})`);
+    gr.addColorStop(.35,`rgba(${R},${G},${B},${a*.25})`);gr.addColorStop(1,`rgba(${R},${G},${B},0)`);
+    g.fillStyle=gr;g.fillRect(x-s,y-s,s*2,s*2);
+  }
+});
+</script>
+</body></html>
