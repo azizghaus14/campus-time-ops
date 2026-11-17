@@ -174,7 +174,7 @@ export function ExecutedCard({ c }: { c: any }) {
   const a = c.actions || {};
   const tiles = [
     { icon: CalendarCheck, n: a.calendar_events || 0, l: "Calendar events", href: c.links?.calendar },
-    { icon: Mail, n: a.gmail_drafts || 0, l: "Gmail drafts", href: c.links?.drafts },
+    { icon: Mail, n: a.gmail_drafts || 0, l: "Gmail drafts", href: c.proposal_id ? `/drafts/${c.proposal_id}` : c.links?.drafts },
     { icon: FileText, n: a.changelog_entries || 0, l: "Change-log entry", href: c.links?.changelog },
   ];
   return (
@@ -195,7 +195,7 @@ export function ExecutedCard({ c }: { c: any }) {
         </div>
         {c.drafts?.length > 0 && (
           <div className="mt-3 space-y-1">{c.drafts.slice(0, 4).map((d: any, k: number) => (
-            <a key={k} href={d.url} target="_blank" className="flex items-center gap-2 text-[12px] muted hover:text-white"><Mail className="h-3 w-3" /><span className="truncate">{d.subject}</span><span className="faint truncate">→ {d.to.join(", ")}</span></a>
+            <a key={k} href={c.proposal_id ? `/drafts/${c.proposal_id}?i=${k}` : d.url} target="_blank" className="flex items-center gap-2 text-[12px] muted hover:text-white"><Mail className="h-3 w-3" /><span className="truncate">{d.subject}</span><span className="faint truncate">→ {d.to.join(", ")}</span></a>
           ))}</div>
         )}
       </div>

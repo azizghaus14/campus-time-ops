@@ -43,7 +43,7 @@ const ROLE_LABEL: Record<Role, string> = { admin: "Timetabling Office", lecturer
 function allowed(role: Role, path: string) {
   if (path === "/") return true;
   if (role === "admin") return true;
-  return NAV[role].some((n) => n.href !== "/" && path.startsWith(n.href)) || (role === "lecturer" && path.startsWith("/proposals/"));
+  return NAV[role].some((n) => n.href !== "/" && path.startsWith(n.href)) || (role === "lecturer" && (path.startsWith("/proposals/") || path.startsWith("/drafts/")));
 }
 
 export default function Shell({ children }: { children: React.ReactNode }) {
