@@ -38,6 +38,14 @@ export default function Drafts() {
     setSending(true); setSendErr(null);
     try { await post(`/outbox/${id}/drafts/${file}/send`); await reload?.(); } catch (e) { setSendErr(e); } finally { setSending(false); }
   };
+  const sendAll = async () => {
+    const todo = (drafts || []).filter((d) => !sent[d.file]);
+    if (!todo.length || !window.confirm(`Send ${todo.length} email${todo.length > 1 ? "s" : ""}? Review them first: this sends every draft not yet sent.`)) return;
+    setSending(true); setSendErr(null);
+    try { for (const d of todo) await post(`/outbox/${id}/drafts/${d.file}/send`); } catch (e) { setSendErr(e); }
+    finally { await reload?.(); setSending(false); }
+  };
+  const unsent = (drafts || []).filter((d) => !sent[d.file]).length;
 
   useEffect(() => {
     (async () => {
@@ -63,6 +71,16 @@ export default function Drafts() {
       <PageHeader title={`Email drafts · ${id}`}
         subtitle="Written after a person approved the plan. Nothing is sent automatically: a person reviews each email and presses Send." />
       <ErrorBox error={error} />
+      {drafts && drafts.length > 0 && (
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-[13px] muted">{drafts.length - unsent} of {drafts.length} sent</span>
+          {unsent > 0 ? (
+            <button onClick={sendAll} disabled={sending}
+              className="inline-flex items-center gap-1.5 rounded-full bg-[var(--green)] px-4 py-1.5 text-[13px] font-semibold text-black hover:opacity-90 disabled:opacity-50">
+              <Send className="h-3.5 w-3.5" /> {sending ? "Sending…" : `Send all (${unsent})`}</button>
+          ) : <Badge tone="green">All sent{sentInfo?.mode === "smtp" ? "" : " · demo mode, not delivered"}</Badge>}
+        </div>
+      )}
       {drafts && !drafts.length && <Card><Empty>No drafts.</Empty></Card>}
       {drafts && drafts.length > 0 && (
         <div className="grid gap-4 md:grid-cols-[minmax(260px,360px)_1fr]">
