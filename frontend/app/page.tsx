@@ -49,7 +49,12 @@ function Assistant({ session }: { session: Session }) {
   const idRef = useRef(1);
   const active = msgs.length > 0;
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }); }, [msgs]);
+  // bring the latest question to the top of the screen, so its answer reads from the start (not the end of a long plan)
+  const lastUser = [...msgs].reverse().find((m) => m.from === "user")?.id;
+  useEffect(() => {
+    if (lastUser == null) return;
+    document.querySelector(`[data-msg="${lastUser}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [lastUser]);
 
   const send: CardAction = async (text, opts) => {
     const t = text.trim();
@@ -82,7 +87,9 @@ function Assistant({ session }: { session: Session }) {
   const composer = (
     <div className="composer-wrap">
       <ComposerGlow soft={active} />
-    <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="liquid w-full">
+    <form onSubmit={(e) => { e.preventDefault(); send(input); }} className="liquid w-full"
+      // inline: the CSS build drops backdrop-filter from .liquid, so text scrolling under the box stayed sharp
+      style={{ backgroundColor: "rgba(14, 14, 22, 0.92)", backdropFilter: "blur(28px) saturate(180%)", WebkitBackdropFilter: "blur(28px) saturate(180%)" }}>
       <div className="relative flex items-end gap-2 p-2.5 pl-3.5">
         <span className="self-center pl-0.5"><Orb state={busy ? "solving" : input ? "listening" : "working"} size={30} tint="violet" /></span>
         <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={active ? 1 : 2}
@@ -121,10 +128,10 @@ function Assistant({ session }: { session: Session }) {
   }
 
   return (
-    <div className="max-w-[820px] mx-auto pb-48">
+    <div className="max-w-[820px] mx-auto pb-[70vh]">
       <div className="space-y-6">
         {msgs.map((m) => (
-          <div key={m.id} className={cn("rise", m.from === "user" ? "flex justify-end" : "")}>
+          <div key={m.id} data-msg={m.id} style={{ scrollMarginTop: 72 }} className={cn("rise", m.from === "user" ? "flex justify-end" : "")}>
             {m.from === "user" ? (
               <div className="max-w-[80%] rounded-[22px] rounded-br-md bg-white/[0.08] border border-white/[0.06] px-4 py-2.5 text-[15px]">{m.text}</div>
             ) : (
@@ -155,7 +162,6 @@ function Assistant({ session }: { session: Session }) {
             <div className="absolute inset-x-0 -bottom-16 h-[260px] opacity-80"><Aurora /></div>
             <Stardust density={0.5} />
           </div>
-          <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-[var(--bg)] to-transparent" />
           <div className="absolute inset-x-0 bottom-6 px-4 pointer-events-auto">
             <div className="max-w-[820px] mx-auto">
               {composer}
