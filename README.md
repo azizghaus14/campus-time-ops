@@ -2,6 +2,8 @@
 
 # Campus Time Ops
 
+### 🏆 1st Place · APU Cloud Innovation Hackathon 2026 (17 Nov 2026)
+
 **AI agents that re-plan APU's live timetable, with a human approving every step.**
 
 [![Live demo](https://img.shields.io/badge/Live_demo-campus--time--ops.onrender.com-8b7cff?style=for-the-badge)](https://campus-time-ops.onrender.com)
@@ -12,7 +14,8 @@
 ![MCP](https://img.shields.io/badge/MCP-28_tools-111111)
 ![Next.js](https://img.shields.io/badge/Next.js_16-React_19-000000?logo=nextdotjs&logoColor=white)
 ![three.js](https://img.shields.io/badge/three.js-3D_campus-000000?logo=threedotjs&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-65_passing-2ea44f)
+![Tests](https://img.shields.io/badge/tests-72_passing-2ea44f)
+![Award](https://img.shields.io/badge/🏆_1st_Place-APU_Cloud_Innovation_Hackathon_2026-f5b301)
 
 APU Cloud Innovation Hackathon 2026 · Category 02: Intelligent Automation & Digital Transformation · **Team Terminal**
 
@@ -57,7 +60,7 @@ APSpace *shows* timetables. Campus Time Ops **re-plans and acts on** them. You s
 
 ```mermaid
 flowchart LR
-    U["Lecturer / Office / Student<br/>plain-language request"] --> A["Assistant<br/>(Gemini Enterprise agents for the final)"]
+    U["Lecturer / Office / Student<br/>plain-language request"] --> A["Assistant<br/>(in-app + Gemini Enterprise A2A agent)"]
     A -- "MCP · 28 tools" --> S["Campus MCP server + REST API<br/>FastAPI"]
     S --> D["APU public timetable feed<br/>pseudonymised snapshot"]
     S --> P["Planner<br/>substitute finder → OR-Tools CP-SAT<br/>+ independent clash checker"]
@@ -67,9 +70,11 @@ flowchart LR
     S --> L["Append-only audit log"]
 ```
 
-- **Replan.** A lecturer is sick, a room floods, or a holiday is declared. The agent finds every affected class, tries a **substitute lecturer** first (same module, free, within daily load), reschedules the rest with **CP-SAT**, cites the APU rule behind every constraint, and waits for approval. Approval creates **Calendar** events and **Gmail drafts** (never sent automatically) plus a change-log entry.
+- **Replan.** A lecturer is sick, a room floods, or a holiday is declared. The agent finds every affected class, tries a **substitute lecturer** first (same module, free, within daily load), reschedules the rest with **CP-SAT**, cites the APU rule behind every constraint, and waits for approval. Approval creates **Calendar** events and **Gmail drafts** plus a change-log entry. Nothing is sent automatically: a person reviews each draft under **Email drafts** and presses **Send** (or **Send all**), and every send is audited.
+- **Move one class.** "Move my Web Design & Development class on Friday to another day" moves only that class to a clash-free slot, no substitute, other classes untouched.
 - **Slot Finder.** Searches the same constraint model for times that work for groups, examiners and rooms.
 - **Insights.** 3D campus, rooms heat map, Timetable Health and read-only **Attendance Risk**.
+- **Ask anything.** One-tap questions take an instant rules path; any other question goes to **Gemini** with read-only tools (timetable, rooms, attendance history), labelled "Answered by Gemini".
 
 ## Quick start (offline, about 2 minutes)
 ```bash
@@ -84,7 +89,7 @@ The app runs on http://localhost:3000, and the API and MCP server on http://loca
 |---|---|
 | `make data` | Fetches the public APU feed, pseudonymises it, writes a dated snapshot, then generates the mocks and the synthetic students |
 | `make data-offline` | Regenerates the mocks and synthetic data from the committed snapshot only |
-| `make test` | Runs the 65 backend tests, including the solver property tests and the approval-gate tests |
+| `make test` | Runs the 72 backend tests, including the solver property tests and the approval-gate tests |
 | `make mcp` / `make inspector` | Runs the MCP server alone on :8001/mcp, or opens it in MCP Inspector |
 | `make bench` | Re-measures the metrics in `docs/METRICS.md` |
 | `make reset-demo` | Restores a clean demo state in under 10 s |
@@ -117,6 +122,6 @@ docs/      ARCHITECTURE, DECISIONS, DEMO_SCRIPT, REPORT_OUTLINE, METRICS, SETUP_
 - **Running on real APSpace data with APU's permission.** Replace the loader with an authenticated APSpace or timetable API, keep the same service and MCP layer, add SSO (IAP or OAuth) in front of the MCP endpoint and the dashboard, and run a data-protection impact assessment with APU (contact: CTI).
 
 ## Status and open items
-- **Agent platform:** per the organisers, the 13 Nov prototype does not need Gemini Enterprise. It ships with the in-app assistant plus the MCP server. For the 17 Nov final (Top 5), the Gemini Enterprise agents connect to the same MCP server through Google OAuth. The configs and instructions are ready in `agents/`, and the ADK + Vertex AI fallback also works (D-02).
-- **Workspace actions:** the real Google Calendar, Gmail and Docs integration is implemented (`WORKSPACE_MODE=google`). It needs a demo Workspace account (see `docs/SETUP_GOOGLE.md`). Local mode writes real `.ics`, `.eml` and markdown files.
+- **Agent platform:** a "Campus Time Ops" **A2A agent** is registered in Gemini Enterprise (APU-Hackathon project) and answers live: it drafts the sick-lecturer plan with our tools in about 9 s. The same tools are also exposed as a Gemini Enterprise MCP connector behind Google OAuth. User access to the Gemini Enterprise chat waits on the project's identity-provider setting. Configs are in `agents/`; the ADK + Vertex AI fallback also works (D-02).
+- **Workspace actions:** the real Google Calendar, Gmail and Docs integration is implemented (`WORKSPACE_MODE=google`). It needs a demo Workspace account (see `docs/SETUP_GOOGLE.md`). Local mode writes real `.ics`, `.eml` and markdown files. Pressing **Send** really delivers when `SMTP_*` is set in `.env` (e.g. a Gmail app password); otherwise it is recorded in demo mode and not delivered.
 - **Still to do:** interviews (`TBD-interview` in METRICS), verifying the attendance threshold with APU, and the per-stop shuttle times (marked VERIFY).
